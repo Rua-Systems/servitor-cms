@@ -197,7 +197,7 @@ docker compose up -d
 
 If you pinned a minor line such as `0.2`, `docker compose pull` alone picks up its newest patch release. Check `/healthz` and sign in afterwards. To go back to the previous version, set `SERVITOR_VERSION` back, start the app and restore the backup you took, as described in [Restoring a backup](operations.md#restoring-a-backup).
 
-Before the project moved to the Rua Systems organization, the images were published at `ghcr.io/justhasanuknow/servitor-cms`. They stay available but receive no new versions. If your Compose file still names that image, change its `image` line to `ghcr.io/rua-systems/servitor-cms`, which has 0.2.1 and every later release.
+Before the project moved to the Rua Systems organization, the images were published at `ghcr.io/justhasanuknow/servitor-cms`, the address that the `docker-compose.yml` of the releases up to 0.2.1 names. That address no longer exists. If your Compose file names it, change its `image` line to `ghcr.io/rua-systems/servitor-cms`, which has 0.2.1 and every later release.
 
 ## Health and monitoring
 

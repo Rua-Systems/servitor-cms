@@ -24,6 +24,8 @@ For production, check out the latest release instead of the development state of
 git checkout v0.2.1
 ```
 
+The `docker-compose.yml` of the releases up to 0.2.1 still names the former image address `ghcr.io/justhasanuknow/servitor-cms`, which no longer exists. After checking out one of them, change its `image` line to `ghcr.io/rua-systems/servitor-cms`.
+
 ## 2. Create the configuration
 
 Copy the commented template:
@@ -90,8 +92,6 @@ Every published image carries a signed attestation of the workflow and commit it
 ```bash
 gh attestation verify oci://ghcr.io/rua-systems/servitor-cms:0.2 --owner Rua-Systems
 ```
-
-Images from before the move to the Rua Systems organization stay at `ghcr.io/justhasanuknow/servitor-cms` and verify with `--owner justhasanuknow`.
 
 The first start creates the database, applies all migrations, creates the default content language and the founder account, and starts listening on port 3000. Later starts apply pending migrations automatically before the app accepts requests.
 
