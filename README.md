@@ -5,7 +5,7 @@
   <img src=".github/assets/servitor-logo-dark.svg" alt="The Servitor CMS mark" width="96">
 </picture>
 
-[![CI](https://github.com/justhasanuknow/servitor-cms/actions/workflows/ci.yml/badge.svg)](https://github.com/justhasanuknow/servitor-cms/actions/workflows/ci.yml)
+[![CI](https://github.com/Rua-Systems/servitor-cms/actions/workflows/ci.yml/badge.svg)](https://github.com/Rua-Systems/servitor-cms/actions/workflows/ci.yml)
 [![License: Apache 2.0](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
 
 Servitor CMS is an open-source, self-hostable CMS for blog posts and articles in many languages. Your team writes in a structured editor, trusted writers publish directly while other authors go through review, and readers get the content from built-in reading pages, a read-only REST API or your own front end notified by webhooks. It runs as a single container with an embedded SQLite database and needs no other services.
@@ -48,7 +48,7 @@ Servitor CMS is an open-source, self-hostable CMS for blog posts and articles in
 Requirements: Docker with Docker Compose.
 
 ```bash
-git clone https://github.com/justhasanuknow/servitor-cms.git
+git clone https://github.com/Rua-Systems/servitor-cms.git
 cd servitor-cms
 cp .env.example .env
 ```
@@ -59,7 +59,7 @@ Edit `.env`: set `BETTER_AUTH_SECRET` to the output of `openssl rand -hex 32`, a
 docker compose up -d
 ```
 
-Compose pulls the prebuilt image `ghcr.io/justhasanuknow/servitor-cms` for amd64 or arm64 in the version set by `SERVITOR_VERSION`; add `--build` to build it from the source instead.
+Compose pulls the prebuilt image `ghcr.io/rua-systems/servitor-cms` for amd64 or arm64 in the version set by `SERVITOR_VERSION`; add `--build` to build it from the source instead.
 
 Open `http://localhost:3000/panel/login` and sign in as the founder; the panel asks for a new password first. For a production setup with TLS, follow [Installation](docs/installation.md) and [Deployment](docs/deployment.md).
 

@@ -1,6 +1,6 @@
 services:
   servitor:
-    image: ghcr.io/justhasanuknow/servitor-cms:${SERVITOR_VERSION:-latest}
+    image: ghcr.io/rua-systems/servitor-cms:${SERVITOR_VERSION:-latest}
     build: .
     env_file: .env
     ports:

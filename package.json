@@ -7,10 +7,10 @@
 	"homepage": "https://servitor.rua.systems",
 	"repository": {
 		"type": "git",
-		"url": "git+https://github.com/justhasanuknow/servitor-cms.git"
+		"url": "git+https://github.com/Rua-Systems/servitor-cms.git"
 	},
 	"bugs": {
-		"url": "https://github.com/justhasanuknow/servitor-cms/issues"
+		"url": "https://github.com/Rua-Systems/servitor-cms/issues"
 	},
 	"type": "module",
 	"scripts": {
