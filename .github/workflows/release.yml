@@ -17,7 +17,7 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  IMAGE: ghcr.io/${{ github.repository }}
+  IMAGE: ghcr.io/rua-systems/servitor-cms
   TAG: ${{ github.event.release.tag_name || inputs.tag }}
 
 jobs:

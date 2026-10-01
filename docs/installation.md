@@ -11,14 +11,14 @@ This guide installs Servitor CMS with Docker Compose, the recommended way to run
 
 ## 1. Get the Compose file
 
-Servitor is published as a prebuilt image for amd64 and arm64 servers at `ghcr.io/justhasanuknow/servitor-cms`. The repository provides the `docker-compose.yml` that runs it and the `.env.example` template. Clone the repository and change into it:
+Servitor is published as a prebuilt image for amd64 and arm64 servers at `ghcr.io/rua-systems/servitor-cms`. The repository provides the `docker-compose.yml` that runs it and the `.env.example` template. Clone the repository and change into it:
 
 ```bash
-git clone https://github.com/justhasanuknow/servitor-cms.git
+git clone https://github.com/Rua-Systems/servitor-cms.git
 cd servitor-cms
 ```
 
-For production, check out the latest release instead of the development state of `main`. The [releases page](https://github.com/justhasanuknow/servitor-cms/releases) lists the versions, for example:
+For production, check out the latest release instead of the development state of `main`. The [releases page](https://github.com/Rua-Systems/servitor-cms/releases) lists the versions, for example:
 
 ```bash
 git checkout v0.2.1
@@ -88,8 +88,10 @@ Compose pulls the image in the version set by `SERVITOR_VERSION` in `.env`, for 
 Every published image carries a signed attestation of the workflow and commit it was built from. With the GitHub CLI you can check it before you run it:
 
 ```bash
-gh attestation verify oci://ghcr.io/justhasanuknow/servitor-cms:0.2 --owner justhasanuknow
+gh attestation verify oci://ghcr.io/rua-systems/servitor-cms:0.2 --owner Rua-Systems
 ```
+
+Images from before the move to the Rua Systems organization stay at `ghcr.io/justhasanuknow/servitor-cms` and verify with `--owner justhasanuknow`.
 
 The first start creates the database, applies all migrations, creates the default content language and the founder account, and starts listening on port 3000. Later starts apply pending migrations automatically before the app accepts requests.
 

@@ -6,6 +6,7 @@ All notable changes to Servitor CMS are listed here. Versions follow [Semantic V
 
 ### Changed
 
+- The project moved to the Rua Systems organization on GitHub: the repository is [github.com/Rua-Systems/servitor-cms](https://github.com/Rua-Systems/servitor-cms), and the old address forwards there. Images are published at `ghcr.io/rua-systems/servitor-cms`, which also has 0.2.1. The images at `ghcr.io/justhasanuknow/servitor-cms` stay available but receive no new versions; change the `image` line of your Compose file to the new address.
 - The Coolify guide deploys the published image from a Compose file pasted into Coolify, instead of a Compose resource from the repository that builds the image on the server.
 - Troubleshooting explains the start failure caused by relative data paths such as `DATABASE_PATH=./data/servitor.db` in a container.
 
