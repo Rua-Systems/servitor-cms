@@ -42,6 +42,8 @@ Type to write paragraphs. Type `/` at the start of a line, or use the **Insert**
 
 Select text to format it with the **Format** toolbar: bold, italic, underline, strikethrough, links, and text color and highlight from a fixed set of colors. **Undo** and **Redo** work as usual, as do the usual keyboard shortcuts such as `Ctrl+B` or `Cmd+B`.
 
+The toolbar stays at the top of the screen while you scroll through a long post. **Focus mode**, the last button of the toolbar, spreads the title and the content over the whole window and hides the post settings; the save status stays visible above the title. Press `Esc` or the button again to return.
+
 Links may point to `http`, `https` and `mailto` addresses or to relative paths; **Open link in a new tab** is available for each link. Pasted content is cleaned up to the formatting the editor supports, and images must come from your own media library.
 
 Very large documents cannot be saved: the limit is about a million characters of editor data, 20,000 elements or a nesting depth of 32.

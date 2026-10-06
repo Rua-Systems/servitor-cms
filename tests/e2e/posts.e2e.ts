@@ -232,3 +232,32 @@ test('translations get their own tabs, fields and history', async ({ browser }) 
 	await expect(page).toHaveURL(new RegExp(`/panel/posts/${postId}/en$`));
 	await expect(page.getByPlaceholder('Post title')).toHaveValue(/^English /);
 });
+
+test('focus mode spreads the title and the content over the window', async ({ browser }) => {
+	const page = await authorPage(browser, 'focus-author');
+
+	await newPost(page);
+
+	const writingArea = page.getByTestId('writing-area');
+	const focusButton = page.getByRole('button', { name: 'Focus mode' });
+	const hint = page.getByText('Press Esc to leave focus mode.');
+
+	await expect(writingArea).not.toHaveCSS('position', 'fixed');
+	await focusButton.click();
+	await expect(focusButton).toHaveAttribute('aria-pressed', 'true');
+	await expect(writingArea).toHaveCSS('position', 'fixed');
+	await expect(hint).toBeVisible();
+
+	await editorContent(page).click();
+	await page.keyboard.type('Written in focus mode');
+	await expect(page.getByRole('status').filter({ hasText: 'Unsaved changes' })).toBeVisible();
+	await expect(page.getByRole('status').filter({ hasText: /^Saved/ })).toBeVisible({
+		timeout: 15_000
+	});
+
+	await page.keyboard.press('Escape');
+	await expect(focusButton).toHaveAttribute('aria-pressed', 'false');
+	await expect(writingArea).not.toHaveCSS('position', 'fixed');
+	await expect(hint).toBeHidden();
+	await expect(editorContent(page)).toContainText('Written in focus mode');
+});

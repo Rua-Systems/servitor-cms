@@ -23,7 +23,15 @@
 	import Toolbar from './toolbar.svelte';
 	import VideoEmbedDialog from './video-embed-dialog.svelte';
 
-	let { content, languageCode, onChange, onBlur, class: className }: EdraEditorProps = $props();
+	let {
+		content,
+		languageCode,
+		onChange,
+		onBlur,
+		focusMode = false,
+		onToggleFocus,
+		class: className
+	}: EdraEditorProps = $props();
 
 	let imagePickerOpen = $state(false);
 	let videoDialogOpen = $state(false);
@@ -114,10 +122,10 @@
 </script>
 
 <Tooltip.Provider delayDuration={300}>
-	<div class={cn('edra overflow-hidden rounded-xl border bg-background', className)}>
+	<div class={cn('edra overflow-clip rounded-xl border bg-background', className)}>
 		{#if editor !== undefined}
-			<Toolbar {actions} />
-			<EditorContent {editor} class="edra-scroll px-4 py-6 sm:px-8" />
+			<Toolbar {actions} {focusMode} {onToggleFocus} />
+			<EditorContent {editor} class="px-4 py-6 sm:px-8" />
 			<TextBubbleMenu />
 			<LinkBubbleMenu />
 			<MathMenu kind="inlineMath" />

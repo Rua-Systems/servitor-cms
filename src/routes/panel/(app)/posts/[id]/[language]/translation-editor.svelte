@@ -46,6 +46,8 @@
 
 	const MAX_SLUG_INPUT_LENGTH = 120;
 
+	const ESCAPE_LAYERS = '[role="dialog"], [role="menu"], [role="listbox"]';
+
 	let { data, form }: TranslationEditorProps = $props();
 
 	const initial = untrack(() => data);
@@ -70,6 +72,7 @@
 	let deleteOpen = $state(false);
 	let publishAt = $state('');
 	let editedSinceLoad = $state(false);
+	let focusMode = $state(false);
 
 	let content = initialContent;
 	let version = initial.editor.draft.version;
@@ -133,6 +136,37 @@
 			publishAt = localDateTimeValue(workflow.scheduledAt);
 		}
 	});
+
+	$effect(() => {
+		if (!focusMode) {
+			return;
+		}
+
+		const root = document.documentElement;
+		const previousOverflow = root.style.overflow;
+
+		root.style.overflow = 'hidden';
+
+		return () => {
+			root.style.overflow = previousOverflow;
+		};
+	});
+
+	function toggleFocusMode(): void {
+		focusMode = !focusMode;
+	}
+
+	function leaveFocusMode(event: KeyboardEvent): void {
+		if (!focusMode || event.key !== 'Escape') {
+			return;
+		}
+
+		if (event.target instanceof Element && event.target.closest(ESCAPE_LAYERS) !== null) {
+			return;
+		}
+
+		focusMode = false;
+	}
 
 	function workflowMessage(notice: WorkflowNotice | null): string | null {
 		switch (notice) {
@@ -397,6 +431,19 @@
 	});
 </script>
 
+{#snippet saveStatus()}
+	{#if saveState === 'saving'}
+		{m.posts_saving()}
+	{:else if saveState === 'dirty'}
+		{m.posts_unsaved_changes()}
+	{:else if saveState === 'error'}
+		{m.posts_save_failed()}
+	{:else}
+		{m.posts_saved_at()}
+		<FormattedDate value={savedAt} />
+	{/if}
+{/snippet}
+<svelte:window onkeydown={leaveFocusMode} />
 <section class="grid gap-6">
 	<div class="grid gap-3">
 		<a
@@ -409,16 +456,7 @@
 			<h1 class="text-2xl font-semibold">{postTitle(title)}</h1>
 			<div class="flex flex-wrap items-center gap-3">
 				<span class="text-sm text-muted-foreground" role="status" aria-live="polite">
-					{#if saveState === 'saving'}
-						{m.posts_saving()}
-					{:else if saveState === 'dirty'}
-						{m.posts_unsaved_changes()}
-					{:else if saveState === 'error'}
-						{m.posts_save_failed()}
-					{:else}
-						{m.posts_saved_at()}
-						<FormattedDate value={savedAt} />
-					{/if}
+					{@render saveStatus()}
 				</span>
 				<Button
 					variant="outline"
@@ -523,26 +561,45 @@
 		</Alert.Root>
 	{/if}
 	<div class="grid gap-6 xl:grid-cols-[minmax(0,1fr)_22rem]">
-		<div class="grid content-start gap-4" lang={languageCode}>
-			<Label for="post-title" class="sr-only">{m.posts_field_title()}</Label>
-			<Input
-				id="post-title"
-				bind:value={title}
-				maxlength={POST_TITLE_MAX_LENGTH}
-				placeholder={m.posts_field_title_placeholder()}
-				class="h-auto rounded-2xl py-3 text-2xl font-semibold"
-				oninput={changed}
-				onblur={flush}
-			/>
-			<EdraEditor
-				content={initialContent}
-				{languageCode}
-				onChange={contentChanged}
-				onBlur={flush}
-			/>
-			<p class="text-sm text-muted-foreground">
-				{m.posts_reading_time({ minutes: String(readingTime) })}
-			</p>
+		<div
+			class={cn(
+				'grid content-start',
+				focusMode && 'fixed inset-0 z-40 overflow-y-auto bg-background px-4 py-6 sm:px-8'
+			)}
+			lang={languageCode}
+			data-testid="writing-area"
+		>
+			<div class={cn('grid content-start gap-4', focusMode && 'mx-auto w-full max-w-3xl')}>
+				{#if focusMode}
+					<div
+						class="flex flex-wrap items-center justify-between gap-3 text-sm text-muted-foreground"
+					>
+						<span>{@render saveStatus()}</span>
+						<span>{m.editor_focus_mode_hint()}</span>
+					</div>
+				{/if}
+				<Label for="post-title" class="sr-only">{m.posts_field_title()}</Label>
+				<Input
+					id="post-title"
+					bind:value={title}
+					maxlength={POST_TITLE_MAX_LENGTH}
+					placeholder={m.posts_field_title_placeholder()}
+					class="h-auto rounded-2xl py-3 text-2xl font-semibold"
+					oninput={changed}
+					onblur={flush}
+				/>
+				<EdraEditor
+					content={initialContent}
+					{languageCode}
+					onChange={contentChanged}
+					onBlur={flush}
+					{focusMode}
+					onToggleFocus={toggleFocusMode}
+				/>
+				<p class="text-sm text-muted-foreground">
+					{m.posts_reading_time({ minutes: String(readingTime) })}
+				</p>
+			</div>
 		</div>
 		<aside class="grid content-start gap-4">
 			<Card.Root>

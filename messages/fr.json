@@ -313,6 +313,8 @@
 	"editor_color_yellow": "Jaune",
 	"editor_colors": "Couleur du texte et surlignage",
 	"editor_content_label": "Contenu de l'article",
+	"editor_focus_mode": "Mode concentration",
+	"editor_focus_mode_hint": "Appuyez sur Échap pour quitter le mode concentration.",
 	"editor_group_format": "Mise en forme",
 	"editor_group_insert": "Insérer",
 	"editor_heading_2": "Titre 2",

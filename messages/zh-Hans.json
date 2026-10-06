@@ -313,6 +313,8 @@
 	"editor_color_yellow": "黄色",
 	"editor_colors": "文字颜色和高亮",
 	"editor_content_label": "文章正文",
+	"editor_focus_mode": "专注模式",
+	"editor_focus_mode_hint": "按 Esc 键退出专注模式。",
 	"editor_group_format": "格式",
 	"editor_group_insert": "插入",
 	"editor_heading_2": "标题 2",
