@@ -51,6 +51,8 @@
 
 	const MAX_SLUG_INPUT_LENGTH = 120;
 
+	const ESCAPE_LAYERS = '[role="dialog"], [role="menu"], [role="listbox"]';
+
 	const settingsTabs: SettingsTab[] = ['details', 'seo', 'settings'];
 
 	let { data, form }: TranslationEditorProps = $props();
@@ -165,11 +167,11 @@
 	}
 
 	function leaveFocusMode(event: KeyboardEvent): void {
-		if (!focusMode || event.key !== 'Escape' || event.defaultPrevented) {
+		if (!focusMode || event.key !== 'Escape') {
 			return;
 		}
 
-		if (event.target instanceof Element && event.target.closest('[role="dialog"]') !== null) {
+		if (event.target instanceof Element && event.target.closest(ESCAPE_LAYERS) !== null) {
 			return;
 		}
 
