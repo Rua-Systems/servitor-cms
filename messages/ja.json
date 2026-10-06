@@ -313,6 +313,8 @@
 	"editor_color_yellow": "黄",
 	"editor_colors": "文字色とハイライト",
 	"editor_content_label": "投稿の本文",
+	"editor_focus_mode": "集中モード",
+	"editor_focus_mode_hint": "Esc キーを押すと集中モードを終了します。",
 	"editor_group_format": "書式",
 	"editor_group_insert": "挿入",
 	"editor_heading_2": "見出し 2",

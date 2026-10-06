@@ -313,6 +313,8 @@
 	"editor_color_yellow": "Gelb",
 	"editor_colors": "Textfarbe und Hervorhebung",
 	"editor_content_label": "Beitragsinhalt",
+	"editor_focus_mode": "Fokusmodus",
+	"editor_focus_mode_hint": "Drücken Sie Esc, um den Fokusmodus zu verlassen.",
 	"editor_group_format": "Format",
 	"editor_group_insert": "Einfügen",
 	"editor_heading_2": "Überschrift 2",

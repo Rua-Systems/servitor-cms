@@ -313,6 +313,8 @@
 	"editor_color_yellow": "Yellow",
 	"editor_colors": "Text color and highlight",
 	"editor_content_label": "Post content",
+	"editor_focus_mode": "Focus mode",
+	"editor_focus_mode_hint": "Press Esc to leave focus mode.",
 	"editor_group_format": "Format",
 	"editor_group_insert": "Insert",
 	"editor_heading_2": "Heading 2",

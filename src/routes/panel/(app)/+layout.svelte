@@ -5,6 +5,7 @@
 	import { prefersReducedMotion } from 'svelte/motion';
 	import { afterNavigate, onNavigate } from '$app/navigation';
 	import { resolve } from '$app/paths';
+	import { page } from '$app/state';
 	import ServitorMark from '$lib/components/brand/servitor-mark.svelte';
 	import NavigationProgress from '$lib/components/panel/navigation-progress.svelte';
 	import { startPageTransition } from '$lib/components/panel/page-transition';
@@ -21,6 +22,8 @@
 	let menuOpen = $state(false);
 
 	const groups = $derived(panelNavigation(data.navigation));
+
+	const wide = $derived(page.route.id === '/panel/(app)/posts/[id]/[language]');
 
 	const motionDuration = $derived.by(() => {
 		if (prefersReducedMotion.current) {
@@ -124,7 +127,7 @@
 			</div>
 		{/if}
 	{/if}
-	<main class="mx-auto w-full max-w-5xl px-4 py-8 lg:px-8">
+	<main class={cn('mx-auto w-full px-4 py-8 lg:px-8', wide && 'max-w-7xl', !wide && 'max-w-5xl')}>
 		{@render children()}
 	</main>
 </div>

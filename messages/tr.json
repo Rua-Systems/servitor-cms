@@ -313,6 +313,8 @@
 	"editor_color_yellow": "Sarı",
 	"editor_colors": "Metin rengi ve vurgu",
 	"editor_content_label": "Gönderi içeriği",
+	"editor_focus_mode": "Odak modu",
+	"editor_focus_mode_hint": "Odak modundan çıkmak için Esc tuşuna basın.",
 	"editor_group_format": "Biçim",
 	"editor_group_insert": "Ekle",
 	"editor_heading_2": "Başlık 2",
