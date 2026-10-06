@@ -21,7 +21,7 @@ cd servitor-cms
 For production, check out the latest release instead of the development state of `main`. The [releases page](https://github.com/Rua-Systems/servitor-cms/releases) lists the versions, for example:
 
 ```bash
-git checkout v0.2.1
+git checkout v0.3.0
 ```
 
 The `docker-compose.yml` of the releases up to 0.2.1 still names the former image address `ghcr.io/justhasanuknow/servitor-cms`, which no longer exists. After checking out one of them, change its `image` line to `ghcr.io/rua-systems/servitor-cms`.
@@ -85,12 +85,12 @@ Every variable is described in [Configuration](configuration.md). Email is optio
 docker compose up -d
 ```
 
-Compose pulls the image in the version set by `SERVITOR_VERSION` in `.env`, for example `0.2` for the newest 0.2.x release. To build the image from the source code instead, for example after changing it, add `--build`.
+Compose pulls the image in the version set by `SERVITOR_VERSION` in `.env`, for example `0.3` for the newest 0.3.x release. To build the image from the source code instead, for example after changing it, add `--build`.
 
 Every published image carries a signed attestation of the workflow and commit it was built from. With the GitHub CLI you can check it before you run it:
 
 ```bash
-gh attestation verify oci://ghcr.io/rua-systems/servitor-cms:0.2 --owner Rua-Systems
+gh attestation verify oci://ghcr.io/rua-systems/servitor-cms:0.3 --owner Rua-Systems
 ```
 
 The first start creates the database, applies all migrations, creates the default content language and the founder account, and starts listening on port 3000. Later starts apply pending migrations automatically before the app accepts requests.

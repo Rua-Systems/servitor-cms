@@ -95,7 +95,7 @@ Coolify runs the published image behind its own proxy, which obtains the certifi
    ```yaml
    services:
      servitor:
-       image: ghcr.io/rua-systems/servitor-cms:0.2.1
+       image: ghcr.io/rua-systems/servitor-cms:0.3.0
        environment:
          ORIGIN: ${ORIGIN:?}
          BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET:?}
@@ -175,14 +175,14 @@ Servitor applies database migrations automatically on start. Migrations only mov
 docker compose exec servitor node build/cli.js backup
 ```
 
-Then check out the tag of the new version, so that `docker-compose.yml` and `.env.example` match it, for example for 0.2.1:
+Then check out the tag of the new version, so that `docker-compose.yml` and `.env.example` match it, for example for 0.3.0:
 
 ```bash
 git fetch --tags
 ```
 
 ```bash
-git checkout v0.2.1
+git checkout v0.3.0
 ```
 
 Compare `.env.example` with your `.env`, set `SERVITOR_VERSION` to the new version, and pull and start the image:
@@ -195,7 +195,7 @@ docker compose pull
 docker compose up -d
 ```
 
-If you pinned a minor line such as `0.2`, `docker compose pull` alone picks up its newest patch release. Check `/healthz` and sign in afterwards. To go back to the previous version, set `SERVITOR_VERSION` back, start the app and restore the backup you took, as described in [Restoring a backup](operations.md#restoring-a-backup).
+If you pinned a minor line such as `0.3`, `docker compose pull` alone picks up its newest patch release. Check `/healthz` and sign in afterwards. To go back to the previous version, set `SERVITOR_VERSION` back, start the app and restore the backup you took, as described in [Restoring a backup](operations.md#restoring-a-backup).
 
 Before the project moved to the Rua Systems organization, the images were published at `ghcr.io/justhasanuknow/servitor-cms`, the address that the `docker-compose.yml` of the releases up to 0.2.1 names. That address no longer exists. If your Compose file names it, change its `image` line to `ghcr.io/rua-systems/servitor-cms`, which has 0.2.1 and every later release.
 
