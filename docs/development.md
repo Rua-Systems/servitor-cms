@@ -159,7 +159,7 @@ The pages in `docs/` are served at `/docs`. Their order and sections come from `
 
 `.github/workflows/ci.yml` runs on pushes to `main` and on pull requests:
 
-- `npm audit` for known vulnerabilities, lint, type check, unit tests, the build and the Playwright tests;
+- `npm audit` for known vulnerabilities in the production dependencies, lint, type check, unit tests, the build and the Playwright tests;
 - a Docker job that builds the image, starts it from an empty volume and checks the health endpoint, the sign-in page, a backup, the unprivileged user and the software bill of materials.
 
 Dependabot proposes updates for npm packages, GitHub Actions and the Docker base image every week.
