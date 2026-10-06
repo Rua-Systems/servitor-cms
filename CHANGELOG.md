@@ -11,6 +11,8 @@ All notable changes to Servitor CMS are listed here. Versions follow [Semantic V
 ### Changed
 
 - The post editor uses more of the screen width and starts taller, and its toolbar stays visible while you scroll through a long post.
+- The publishing actions and the translation fields share one card next to the editor, with the fields in the **Details**, **SEO** and **Settings** tabs. The card stays in view while you scroll.
+- Publishing and submitting for review need a title, content, an excerpt and a meta description. The editor lists what is missing and marks the tabs that hold it, and the server refuses the request otherwise. Live translations stay online, but publishing them again needs the same fields.
 - The project moved to the Rua Systems organization on GitHub: the repository is [github.com/Rua-Systems/servitor-cms](https://github.com/Rua-Systems/servitor-cms), and the old address forwards there. Images are published at `ghcr.io/rua-systems/servitor-cms`, which also has 0.2.1. The former image address `ghcr.io/justhasanuknow/servitor-cms`, which the `docker-compose.yml` of earlier releases names, no longer exists; change the `image` line of your Compose file to the new address.
 - The Coolify guide deploys the published image from a Compose file pasted into Coolify, instead of a Compose resource from the repository that builds the image on the server.
 - Troubleshooting explains the start failure caused by relative data paths such as `DATABASE_PATH=./data/servitor.db` in a container.

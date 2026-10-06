@@ -1,7 +1,13 @@
 import { expect, test } from '@playwright/test';
 import sharp from 'sharp';
 import { E2E_ORIGIN } from '../../playwright.env';
-import { authorPage, editorContent, newPost, saveExplicitly } from './posts-support';
+import {
+	authorPage,
+	editorContent,
+	newPost,
+	openSettingsTab,
+	saveExplicitly
+} from './posts-support';
 import { newClient } from './support';
 
 test('authors write, autosave, save, restore and delete a post', async ({ browser }) => {
@@ -260,4 +266,39 @@ test('focus mode spreads the title and the content over the window', async ({ br
 	await expect(writingArea).not.toHaveCSS('position', 'fixed');
 	await expect(hint).toBeHidden();
 	await expect(editorContent(page)).toContainText('Written in focus mode');
+});
+
+test('publishing waits until the title, content, excerpt and meta description are filled in', async ({
+	browser
+}) => {
+	const page = await newClient(browser, true);
+
+	await newPost(page);
+
+	const publish = page.getByRole('button', { name: 'Publish', exact: true });
+	const missing = page.getByTestId('publish-missing');
+
+	await expect(publish).toBeDisabled();
+	await expect(missing.getByRole('button')).toHaveText([
+		'Title',
+		'Post content',
+		'Excerpt',
+		'Meta description'
+	]);
+	await expect(page.getByRole('tab', { name: /SEO/ })).toContainText('Fields missing');
+
+	await page.getByPlaceholder('Post title').fill(`Ready ${Date.now()}`);
+	await editorContent(page).click();
+	await page.keyboard.type('Ready to go');
+	await page.getByLabel('Excerpt').fill('A short summary');
+	await missing.getByRole('button', { name: 'Meta description' }).click();
+	await expect(page.getByRole('tab', { name: /SEO/ })).toHaveAttribute('aria-selected', 'true');
+	await expect(page.getByLabel('Meta description')).toBeFocused();
+	await page.keyboard.type('What readers see in search results');
+
+	await expect(missing).toHaveCount(0);
+	await expect(publish).toBeEnabled();
+	await openSettingsTab(page, 'Details');
+	await publish.click();
+	await expect(page).toHaveURL(/\?workflow=published$/);
 });

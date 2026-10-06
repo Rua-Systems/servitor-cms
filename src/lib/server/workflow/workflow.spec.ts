@@ -17,6 +17,7 @@ import { createPost, deletePost, findPost, findTranslation } from '../posts/post
 import type { TranslationDraftInput } from '../posts/posts.interfaces';
 import { loadTranslationEditor } from '../posts/translation-drafts';
 import { TestCookieJar } from '../testing/cookie-jar';
+import { withPublishFields } from '../testing/posts';
 import { createTestRuntime } from '../testing/runtime';
 import { hidePost, unhidePost } from './moderation';
 import { listReviewQueue, loadReview } from './reviews';
@@ -142,7 +143,7 @@ function publish(
 		owner,
 		postId,
 		'en',
-		draft(postId, owner, { title: 'Title', ...overrides }),
+		withPublishFields(draft(postId, owner, { title: 'Title', ...overrides }), overrides),
 		scheduledAt
 	);
 }
@@ -275,6 +276,25 @@ describe('trusted publishing', () => {
 		expect(publish(second, trusted, { title: 'Other', slug: 'shared' })).toEqual({
 			status: 'slug_taken'
 		});
+	});
+
+	it('requires content, an excerpt and a meta description and saves nothing without them', () => {
+		const postId = newPost(trusted);
+		const empty = JSON.stringify({ type: 'doc', content: [{ type: 'paragraph' }] });
+
+		expect(publish(postId, trusted, { content: empty })).toEqual({
+			status: 'content_required'
+		});
+		expect(publish(postId, trusted, { excerpt: ' ' })).toEqual({ status: 'excerpt_required' });
+		expect(publish(postId, trusted, { metaDescription: '' })).toEqual({
+			status: 'meta_description_required'
+		});
+
+		const current = translation(postId);
+
+		expect(current.status).toBe('draft');
+		expect(current.liveRevisionId).toBeNull();
+		expect(audits(postId)).toEqual([]);
 	});
 });
 

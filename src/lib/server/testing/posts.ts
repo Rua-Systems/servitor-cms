@@ -1,3 +1,4 @@
+import { hasDocumentContent } from '../../content/document-content';
 import type { AuthUser } from '../auth/auth';
 import { createPost, findTranslation } from '../posts/posts';
 import type { TranslationDraftInput, TranslationRecord } from '../posts/posts.interfaces';
@@ -61,6 +62,27 @@ export function draftInput(
 	};
 }
 
+export function withPublishFields(
+	input: TranslationDraftInput,
+	overrides: Partial<TranslationDraftInput>
+): TranslationDraftInput {
+	const filled = { ...input };
+
+	if (!('content' in overrides) && !hasDocumentContent(filled.content)) {
+		filled.content = paragraphs('Body');
+	}
+
+	if (!('excerpt' in overrides) && filled.excerpt.trim() === '') {
+		filled.excerpt = 'Summary';
+	}
+
+	if (!('metaDescription' in overrides) && (filled.metaDescription ?? '').trim() === '') {
+		filled.metaDescription = 'Description';
+	}
+
+	return filled;
+}
+
 export function saveTestDraft(
 	runtime: Runtime,
 	owner: AuthUser,
@@ -93,7 +115,7 @@ export function publishTestDraft(
 		owner,
 		postId,
 		languageCode,
-		draftInput(runtime, owner, postId, overrides, languageCode),
+		withPublishFields(draftInput(runtime, owner, postId, overrides, languageCode), overrides),
 		scheduledAt
 	);
 }

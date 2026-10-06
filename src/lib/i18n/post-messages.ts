@@ -76,6 +76,12 @@ export function postErrorMessage(error: string | undefined): string | null {
 			return m.posts_error_slug_taken();
 		case 'title_required':
 			return m.posts_error_title_required();
+		case 'content_required':
+			return m.posts_error_content_required();
+		case 'excerpt_required':
+			return m.posts_error_excerpt_required();
+		case 'meta_description_required':
+			return m.posts_error_meta_description_required();
 		case 'too_many_tags':
 			return m.posts_error_too_many_tags();
 		case 'tag_too_long':

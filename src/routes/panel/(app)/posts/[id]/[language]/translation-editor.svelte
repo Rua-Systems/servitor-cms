@@ -5,7 +5,7 @@
 	import Save from '@lucide/svelte/icons/save';
 	import Send from '@lucide/svelte/icons/send';
 	import type { ActionResult, SubmitFunction } from '@sveltejs/kit';
-	import { onMount, untrack } from 'svelte';
+	import { onMount, tick, untrack } from 'svelte';
 	import { deserialize, enhance } from '$app/forms';
 	import { beforeNavigate } from '$app/navigation';
 	import { resolve } from '$app/paths';
@@ -22,6 +22,8 @@
 	import * as Dialog from '$lib/components/ui/dialog';
 	import { Input } from '$lib/components/ui/input';
 	import { Label } from '$lib/components/ui/label';
+	import { Separator } from '$lib/components/ui/separator';
+	import * as Tabs from '$lib/components/ui/tabs';
 	import { Textarea } from '$lib/components/ui/textarea';
 	import {
 		META_DESCRIPTION_MAX_LENGTH,
@@ -30,10 +32,13 @@
 		POST_TITLE_MAX_LENGTH,
 		TAG_INPUT_MAX_LENGTH
 	} from '$lib/constants/content';
+	import { hasDocumentContent } from '$lib/content/document-content';
 	import { languageLabel, postErrorMessage, postTitle } from '$lib/i18n/post-messages';
 	import { m } from '$lib/paraglide/messages';
 	import { cn } from '$lib/utils';
 	import { errorCodeOf, publishOutcomeOf, savedDraftOf, workflowNoticeOf } from './draft-results';
+	import { publishIssues, tabHasIssues } from './publish-readiness';
+	import type { PublishField, PublishIssue, SettingsTab } from './publish-readiness.interfaces';
 	import { localDateTimeValue, scheduleIso } from './schedule-input';
 	import type {
 		DraftSaveMode,
@@ -45,6 +50,8 @@
 	const AUTOSAVE_DELAY_MS = 3000;
 
 	const MAX_SLUG_INPUT_LENGTH = 120;
+
+	const settingsTabs: SettingsTab[] = ['details', 'seo', 'settings'];
 
 	let { data, form }: TranslationEditorProps = $props();
 
@@ -71,6 +78,8 @@
 	let publishAt = $state('');
 	let editedSinceLoad = $state(false);
 	let focusMode = $state(false);
+	let hasContent = $state(hasDocumentContent(initialContent));
+	let settingsTab: SettingsTab = $state('details');
 
 	let content = initialContent;
 	let version = initial.editor.draft.version;
@@ -106,6 +115,7 @@
 	const workflowNotice = $derived(
 		workflowMessage(workflowNoticeOf(page.url.searchParams.get('workflow')))
 	);
+	const issues = $derived(publishIssues({ title, hasContent, excerpt, metaDescription }));
 	const canSchedule = $derived(workflow.publishedAt === null);
 	const canUnpublish = $derived(
 		workflow.status === 'published' || workflow.status === 'scheduled'
@@ -166,6 +176,52 @@
 		focusMode = false;
 	}
 
+	function tabLabel(tab: SettingsTab): string {
+		switch (tab) {
+			case 'seo':
+				return m.posts_tab_seo();
+			case 'settings':
+				return m.posts_tab_settings();
+			default:
+				return m.posts_tab_details();
+		}
+	}
+
+	function fieldLabel(field: PublishField): string {
+		switch (field) {
+			case 'title':
+				return m.posts_field_title();
+			case 'content':
+				return m.editor_content_label();
+			case 'excerpt':
+				return m.posts_field_excerpt();
+			default:
+				return m.posts_field_meta_description();
+		}
+	}
+
+	function fieldElement(field: PublishField): HTMLElement | null {
+		switch (field) {
+			case 'title':
+				return document.getElementById('post-title');
+			case 'content':
+				return document.querySelector<HTMLElement>('.edra-content');
+			case 'excerpt':
+				return document.getElementById('post-excerpt');
+			default:
+				return document.getElementById('post-meta-description');
+		}
+	}
+
+	async function showIssue(issue: PublishIssue): Promise<void> {
+		if (issue.tab !== null) {
+			settingsTab = issue.tab;
+		}
+
+		await tick();
+		fieldElement(issue.field)?.focus();
+	}
+
 	function workflowMessage(notice: WorkflowNotice | null): string | null {
 		switch (notice) {
 			case 'published':
@@ -209,6 +265,7 @@
 
 	function contentChanged(next: string): void {
 		content = next;
+		hasContent = hasDocumentContent(next);
 		changed();
 	}
 
@@ -599,7 +656,9 @@
 				</p>
 			</div>
 		</div>
-		<aside class="grid content-start gap-4">
+		<aside
+			class="grid content-start gap-4 xl:sticky xl:top-6 xl:max-h-[calc(100svh-3rem)] xl:self-start xl:overflow-y-auto"
+		>
 			<Card.Root>
 				<Card.Header>
 					<Card.Title><h2 class="font-semibold">{m.workflow_title()}</h2></Card.Title>
@@ -640,8 +699,26 @@
 					{#if !workflow.trusted && !republishes}
 						<p class="text-xs text-muted-foreground">{m.workflow_untrusted_hint()}</p>
 					{/if}
+					{#if issues.length > 0}
+						<div class="grid gap-1 text-sm" data-testid="publish-missing">
+							<p class="text-muted-foreground">{m.posts_publish_missing()}</p>
+							<ul class="flex flex-wrap gap-x-3 gap-y-1">
+								{#each issues as issue (issue.field)}
+									<li>
+										<button
+											type="button"
+											class="text-destructive underline-offset-4 hover:underline"
+											onclick={() => showIssue(issue)}
+										>
+											{fieldLabel(issue.field)}
+										</button>
+									</li>
+								{/each}
+							</ul>
+						</div>
+					{/if}
 					<div class="flex flex-wrap gap-2">
-						<Button onclick={publish} disabled={conflict}>
+						<Button onclick={publish} disabled={conflict || issues.length > 0}>
 							<Send />
 							{publishLabel}
 						</Button>
@@ -652,142 +729,151 @@
 							</Button>
 						{/if}
 					</div>
-				</Card.Content>
-			</Card.Root>
-			<Card.Root>
-				<Card.Header>
-					<Card.Title><h2 class="font-semibold">{m.posts_details()}</h2></Card.Title>
-				</Card.Header>
-				<Card.Content class="grid gap-4">
-					<div class="grid gap-2">
-						<Label for="post-slug">{m.posts_field_slug()}</Label>
-						<Input
-							id="post-slug"
-							bind:value={slug}
-							maxlength={MAX_SLUG_INPUT_LENGTH}
-							placeholder={m.posts_field_slug_placeholder()}
-							oninput={changed}
-							onblur={flush}
-						/>
-						<p class="text-xs text-muted-foreground">{m.posts_field_slug_hint()}</p>
-						{#if data.editor.liveSlug !== null}
-							<p class="text-xs text-muted-foreground">
-								{m.posts_live_slug({ slug: data.editor.liveSlug })}
-							</p>
-						{/if}
-					</div>
-					<div class="grid gap-2">
-						<Label for="post-excerpt">{m.posts_field_excerpt()}</Label>
-						<Textarea
-							id="post-excerpt"
-							bind:value={excerpt}
-							maxlength={POST_EXCERPT_MAX_LENGTH}
-							rows={3}
-							oninput={changed}
-							onblur={flush}
-						/>
-					</div>
-					<div class="grid gap-2">
-						<Label for="post-tags">{m.posts_field_tags()}</Label>
-						<Input
-							id="post-tags"
-							bind:value={tags}
-							maxlength={TAG_INPUT_MAX_LENGTH}
-							placeholder={m.posts_field_tags_placeholder()}
-							oninput={changed}
-							onblur={flush}
-						/>
-						<p class="text-xs text-muted-foreground">{m.posts_field_tags_hint()}</p>
-					</div>
-				</Card.Content>
-			</Card.Root>
-			<Card.Root>
-				<Card.Header>
-					<Card.Title><h2 class="font-semibold">{m.posts_seo()}</h2></Card.Title>
-				</Card.Header>
-				<Card.Content class="grid gap-4">
-					<div class="grid gap-2">
-						<Label for="post-meta-title">{m.posts_field_meta_title()}</Label>
-						<Input
-							id="post-meta-title"
-							bind:value={metaTitle}
-							maxlength={META_TITLE_MAX_LENGTH}
-							oninput={changed}
-							onblur={flush}
-						/>
-					</div>
-					<div class="grid gap-2">
-						<Label for="post-meta-description">{m.posts_field_meta_description()}</Label
-						>
-						<Textarea
-							id="post-meta-description"
-							bind:value={metaDescription}
-							maxlength={META_DESCRIPTION_MAX_LENGTH}
-							rows={3}
-							oninput={changed}
-							onblur={flush}
-						/>
-					</div>
-					<MediaField
-						id="post-og-image"
-						label={m.posts_field_og_image()}
-						description={m.posts_field_og_image_hint()}
-						bind:value={ogMedia}
-						{languageCode}
-						onChange={changed}
-					/>
-				</Card.Content>
-			</Card.Root>
-			<Card.Root>
-				<Card.Header>
-					<Card.Title><h2 class="font-semibold">{m.posts_settings()}</h2></Card.Title>
-					<Card.Description>{m.posts_settings_description()}</Card.Description>
-				</Card.Header>
-				<Card.Content>
-					<form
-						method="POST"
-						action="?/settings"
-						class="grid gap-4"
-						use:enhance={keepSettingsState}
-					>
-						<div class="grid gap-2">
-							<Label for="post-category">{m.posts_field_category()}</Label>
-							<NativeSelect
-								id="post-category"
-								name="categoryId"
-								options={categoryOptions}
-								value={data.post.categoryId ?? ''}
+					<Separator />
+					<Tabs.Root bind:value={settingsTab}>
+						<Tabs.List class="w-full">
+							{#each settingsTabs as tab (tab)}
+								<Tabs.Trigger value={tab}>
+									{tabLabel(tab)}
+									{#if tabHasIssues(issues, tab)}
+										<span
+											class="size-1.5 rounded-full bg-destructive"
+											aria-hidden="true"
+										></span>
+										<span class="sr-only">{m.posts_tab_incomplete()}</span>
+									{/if}
+								</Tabs.Trigger>
+							{/each}
+						</Tabs.List>
+						<Tabs.Content value="details" class="grid gap-4 pt-2">
+							<div class="grid gap-2">
+								<Label for="post-slug">{m.posts_field_slug()}</Label>
+								<Input
+									id="post-slug"
+									bind:value={slug}
+									maxlength={MAX_SLUG_INPUT_LENGTH}
+									placeholder={m.posts_field_slug_placeholder()}
+									oninput={changed}
+									onblur={flush}
+								/>
+								<p class="text-xs text-muted-foreground">
+									{m.posts_field_slug_hint()}
+								</p>
+								{#if data.editor.liveSlug !== null}
+									<p class="text-xs text-muted-foreground">
+										{m.posts_live_slug({ slug: data.editor.liveSlug })}
+									</p>
+								{/if}
+							</div>
+							<div class="grid gap-2">
+								<Label for="post-excerpt">{m.posts_field_excerpt()}</Label>
+								<Textarea
+									id="post-excerpt"
+									bind:value={excerpt}
+									maxlength={POST_EXCERPT_MAX_LENGTH}
+									rows={3}
+									oninput={changed}
+									onblur={flush}
+								/>
+							</div>
+							<div class="grid gap-2">
+								<Label for="post-tags">{m.posts_field_tags()}</Label>
+								<Input
+									id="post-tags"
+									bind:value={tags}
+									maxlength={TAG_INPUT_MAX_LENGTH}
+									placeholder={m.posts_field_tags_placeholder()}
+									oninput={changed}
+									onblur={flush}
+								/>
+								<p class="text-xs text-muted-foreground">
+									{m.posts_field_tags_hint()}
+								</p>
+							</div>
+						</Tabs.Content>
+						<Tabs.Content value="seo" class="grid gap-4 pt-2">
+							<div class="grid gap-2">
+								<Label for="post-meta-title">{m.posts_field_meta_title()}</Label>
+								<Input
+									id="post-meta-title"
+									bind:value={metaTitle}
+									maxlength={META_TITLE_MAX_LENGTH}
+									oninput={changed}
+									onblur={flush}
+								/>
+							</div>
+							<div class="grid gap-2">
+								<Label for="post-meta-description"
+									>{m.posts_field_meta_description()}</Label
+								>
+								<Textarea
+									id="post-meta-description"
+									bind:value={metaDescription}
+									maxlength={META_DESCRIPTION_MAX_LENGTH}
+									rows={3}
+									oninput={changed}
+									onblur={flush}
+								/>
+							</div>
+							<MediaField
+								id="post-og-image"
+								label={m.posts_field_og_image()}
+								description={m.posts_field_og_image_hint()}
+								bind:value={ogMedia}
+								{languageCode}
+								onChange={changed}
 							/>
-						</div>
-						<MediaField
-							id="post-cover"
-							label={m.posts_field_cover()}
-							bind:value={cover}
-							{languageCode}
-							name="coverMediaId"
-							disabled={data.post.settingsLocked}
-						/>
-						{#if data.post.settingsLocked}
-							<p class="text-xs text-muted-foreground">{m.posts_settings_locked()}</p>
-						{/if}
-						{#if settingsSaved}
-							<p class="text-sm text-muted-foreground" role="status">
-								{m.posts_settings_saved()}
-							</p>
-						{/if}
-						{#if formError !== null}
-							<p class="text-sm text-destructive" role="alert">{formError}</p>
-						{/if}
-						<div>
-							<Button
-								type="submit"
-								variant="outline"
-								disabled={data.post.settingsLocked}
+						</Tabs.Content>
+						<Tabs.Content value="settings" class="grid gap-4 pt-2">
+							<p class="text-muted-foreground">{m.posts_settings_description()}</p>
+							<form
+								method="POST"
+								action="?/settings"
+								class="grid gap-4"
+								use:enhance={keepSettingsState}
 							>
-								{m.posts_settings_save()}
-							</Button>
-						</div>
-					</form>
+								<div class="grid gap-2">
+									<Label for="post-category">{m.posts_field_category()}</Label>
+									<NativeSelect
+										id="post-category"
+										name="categoryId"
+										options={categoryOptions}
+										value={data.post.categoryId ?? ''}
+									/>
+								</div>
+								<MediaField
+									id="post-cover"
+									label={m.posts_field_cover()}
+									bind:value={cover}
+									{languageCode}
+									name="coverMediaId"
+									disabled={data.post.settingsLocked}
+								/>
+								{#if data.post.settingsLocked}
+									<p class="text-xs text-muted-foreground">
+										{m.posts_settings_locked()}
+									</p>
+								{/if}
+								{#if settingsSaved}
+									<p class="text-sm text-muted-foreground" role="status">
+										{m.posts_settings_saved()}
+									</p>
+								{/if}
+								{#if formError !== null}
+									<p class="text-sm text-destructive" role="alert">{formError}</p>
+								{/if}
+								<div>
+									<Button
+										type="submit"
+										variant="outline"
+										disabled={data.post.settingsLocked}
+									>
+										{m.posts_settings_save()}
+									</Button>
+								</div>
+							</form>
+						</Tabs.Content>
+					</Tabs.Root>
 				</Card.Content>
 			</Card.Root>
 			<Card.Root>

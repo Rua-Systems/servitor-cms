@@ -9,6 +9,8 @@ Every translation of a post is published on its own. This page explains who can 
 
 The **Publishing** card of the editor shows the actions that apply to you and the current state of the translation.
 
+**Publish** and **Submit for review** stay unavailable until the translation has a title, content, an excerpt and a meta description. The card lists what is still missing; choose an entry to go to its field.
+
 ## Publishing directly
 
 1. Write the translation and, if you like, choose **Save** to keep a history entry.

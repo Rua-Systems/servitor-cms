@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { authorPage, editorContent, newPost } from './posts-support';
+import { authorPage, editorContent, fillPublishFields, newPost } from './posts-support';
 import { newClient } from './support';
 
 const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
@@ -18,6 +18,7 @@ async function writeDraft(page: Page, title: string, text: string): Promise<void
 	await page.getByPlaceholder('Post title').fill(title);
 	await editorContent(page).click();
 	await page.keyboard.type(text);
+	await fillPublishFields(page, `Summary of ${title}`);
 }
 
 test('authors submit for review, see rejections and publish after approval', async ({
