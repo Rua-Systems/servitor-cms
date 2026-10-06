@@ -1,6 +1,7 @@
 import type { AuditActorType } from '../../constants/audit';
 import type { TranslationStatus } from '../../constants/content';
 import type { DraftSaveResult } from '../posts/posts.interfaces';
+import type { PublishRequirementStatus } from '../posts/publish-requirements.interfaces';
 import type { WorkflowChange } from './transitions.interfaces';
 
 export interface WorkflowActor {
@@ -20,6 +21,7 @@ export type PublishOutcome = 'published' | 'scheduled' | 'submitted' | 'republis
 
 export type PublishResult =
 	| Exclude<DraftSaveResult, { status: 'saved' }>
+	| { status: PublishRequirementStatus }
 	| { status: 'done'; outcome: PublishOutcome }
 	| { status: 'not_allowed' }
 	| { status: 'slug_taken' }

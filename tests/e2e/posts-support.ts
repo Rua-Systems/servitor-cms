@@ -36,6 +36,20 @@ export function editorContent(page: Page) {
 	return page.getByRole('textbox', { name: 'Post content' });
 }
 
+export async function openSettingsTab(
+	page: Page,
+	name: 'Details' | 'SEO' | 'Settings'
+): Promise<void> {
+	await page.getByRole('tab', { name }).click();
+}
+
+export async function fillPublishFields(page: Page, summary: string): Promise<void> {
+	await page.getByLabel('Excerpt').fill(summary);
+	await openSettingsTab(page, 'SEO');
+	await page.getByLabel('Meta description').fill(summary);
+	await openSettingsTab(page, 'Details');
+}
+
 export async function saveExplicitly(page: Page): Promise<void> {
 	await page.getByRole('button', { name: 'Save', exact: true }).click();
 	await expect(page.getByText(SAVED_TO_HISTORY)).toBeVisible();

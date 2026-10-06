@@ -12,6 +12,7 @@ import type {
 	TranslationDraftInput,
 	TranslationRecord
 } from '../posts/posts.interfaces';
+import { missingPublishRequirement } from '../posts/publish-requirements';
 import { readRevisionPayload, samePayload } from '../posts/revision-store';
 import { saveTranslationDraft } from '../posts/translation-drafts';
 import type { Runtime } from '../runtime.interfaces';
@@ -47,6 +48,12 @@ export function publishFromEditor(
 	input: TranslationDraftInput,
 	scheduledAt: Date | null
 ): PublishResult {
+	const missing = missingPublishRequirement(input);
+
+	if (missing !== null) {
+		return { status: missing };
+	}
+
 	const saved = saveTranslationDraft(runtime, actor, postId, languageCode, input, 'save');
 
 	if (saved.status !== 'saved') {

@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 import { E2E_FOUNDER } from '../../playwright.env';
-import { editorContent, newPost } from './posts-support';
+import { editorContent, fillPublishFields, newPost } from './posts-support';
 import { confirmedAction, newClient } from './support';
 
 test('staff add a webhook, follow its deliveries, rotate its secret and delete it', async ({
@@ -33,6 +33,7 @@ test('staff add a webhook, follow its deliveries, rotate its secret and delete i
 	await author.getByPlaceholder('Post title').fill(`Webhook ${Date.now()}`);
 	await editorContent(author).click();
 	await author.keyboard.type('Triggers an event');
+	await fillPublishFields(author, 'Summary of the webhook post');
 	await author.getByRole('button', { name: 'Publish', exact: true }).click();
 	await expect(author).toHaveURL(/\?workflow=published$/);
 

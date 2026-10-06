@@ -59,8 +59,10 @@ The **Revision history** lists every saved entry with its author, date and revie
 
 ## Translation details
 
+The card next to the editor holds the publishing actions and, below them, three tabs: **Details** with the fields of this section, **SEO** with the fields for search and sharing, and **Settings** with the post settings. A dot on a tab marks a field that is still missing for publishing.
+
 - **Slug**: the last part of the address, for example `/blog/en/my-first-post`. Leave it empty to create it from the title when you save. Slugs use lowercase letters, digits and dashes and must be unique per language; titles without Latin letters get a short random slug. Changing the slug of a live translation changes its address, and links to the old address stop working.
-- **Excerpt**: a short summary of up to 1,000 characters for post lists, feeds and search results.
+- **Excerpt**: a short summary of up to 1,000 characters for post lists, feeds and search results. Required for publishing.
 - **Tags**: up to 20 tags of up to 50 characters, separated by commas. Tags belong to the translation and get their own pages on the public site.
 
 The reading time is calculated automatically from the content.
@@ -68,7 +70,7 @@ The reading time is calculated automatically from the content.
 ## Search and sharing
 
 - **Meta title**: the title shown in search results. The post title is used when it is empty.
-- **Meta description**: the description for search results and link previews. The excerpt is used when it is empty.
+- **Meta description**: the description for search results and link previews. Required for publishing; for translations published before that, the excerpt is used while it is empty.
 - **Social sharing image**: the image shown when the post is shared on social networks. The cover image is used when it is empty.
 
 ## Post settings

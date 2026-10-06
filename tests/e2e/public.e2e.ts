@@ -1,6 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
 import { E2E_FOUNDER, E2E_ORIGIN } from '../../playwright.env';
-import { authorPage, editorContent, newPost } from './posts-support';
+import { authorPage, editorContent, fillPublishFields, newPost } from './posts-support';
 import { confirmedAction, newClient } from './support';
 
 test.describe.configure({ mode: 'serial' });
@@ -8,7 +8,7 @@ test.describe.configure({ mode: 'serial' });
 async function publishAsFounder(page: Page, title: string, text: string): Promise<string> {
 	await newPost(page);
 	await page.getByPlaceholder('Post title').fill(title);
-	await page.getByLabel('Excerpt').fill(`Summary of ${title}`);
+	await fillPublishFields(page, `Summary of ${title}`);
 	await page.getByLabel('Tags').fill('Field work');
 	await editorContent(page).click();
 	await page.keyboard.type(text);
@@ -90,6 +90,9 @@ test('drafts stay private and hidden posts disappear from the public site', asyn
 	const publicPath = `/blog/en/pending-${stamp}`;
 
 	await author.getByPlaceholder('Post title').fill(title);
+	await editorContent(author).click();
+	await author.keyboard.type('Waiting for review');
+	await fillPublishFields(author, `Summary of ${title}`);
 	await author.getByRole('button', { name: 'Submit for review' }).click();
 	await expect(author).toHaveURL(/\?workflow=submitted$/);
 
