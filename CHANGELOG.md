@@ -2,7 +2,7 @@
 
 All notable changes to Servitor CMS are listed here. Versions follow [Semantic Versioning](https://semver.org/); before 1.0.0, a minor version may change configuration, the API or the data in incompatible ways, and its notes say so.
 
-## Unreleased
+## 0.3.0 - 2026-10-06
 
 ### Added
 
@@ -16,6 +16,12 @@ All notable changes to Servitor CMS are listed here. Versions follow [Semantic V
 - The project moved to the Rua Systems organization on GitHub: the repository is [github.com/Rua-Systems/servitor-cms](https://github.com/Rua-Systems/servitor-cms), and the old address forwards there. Images are published at `ghcr.io/rua-systems/servitor-cms`, which also has 0.2.1. The former image address `ghcr.io/justhasanuknow/servitor-cms`, which the `docker-compose.yml` of earlier releases names, no longer exists; change the `image` line of your Compose file to the new address.
 - The Coolify guide deploys the published image from a Compose file pasted into Coolify, instead of a Compose resource from the repository that builds the image on the server.
 - Troubleshooting explains the start failure caused by relative data paths such as `DATABASE_PATH=./data/servitor.db` in a container.
+
+### Upgrading
+
+- Set `SERVITOR_VERSION=0.3` in your `.env`. There are no new migrations.
+- If your Compose file names `ghcr.io/justhasanuknow/servitor-cms`, change its `image` line to `ghcr.io/rua-systems/servitor-cms`.
+- Translations without an excerpt or a meta description stay online, but need both before they can be published again.
 
 ## 0.2.1 - 2026-09-25
 
