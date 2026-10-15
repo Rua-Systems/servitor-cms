@@ -107,6 +107,7 @@ function draft(
 		ogMediaId: current.draft.ogMediaId,
 		tags: current.draft.tags.join(', '),
 		content: current.draft.content,
+		cardValues: current.draft.cardValues,
 		version: current.draft.version,
 		...overrides
 	};

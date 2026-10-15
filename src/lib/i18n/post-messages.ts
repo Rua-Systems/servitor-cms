@@ -82,6 +82,12 @@ export function postErrorMessage(error: string | undefined): string | null {
 			return m.posts_error_excerpt_required();
 		case 'meta_description_required':
 			return m.posts_error_meta_description_required();
+		case 'card_fields_required':
+			return m.posts_error_card_fields_required();
+		case 'invalid_card_value':
+			return m.posts_error_invalid_card_value();
+		case 'unknown_card_type':
+			return m.posts_error_unknown_card_type();
 		case 'too_many_tags':
 			return m.posts_error_too_many_tags();
 		case 'tag_too_long':

@@ -23,6 +23,8 @@ export function cardTypeErrorMessage(error: string | undefined): string | null {
 			return m.card_types_error_options_required();
 		case 'invalid_currency':
 			return m.card_types_error_invalid_currency();
+		case 'in_use':
+			return m.card_types_error_in_use();
 		default:
 			return m.card_types_error_invalid_input();
 	}

@@ -42,4 +42,26 @@ A type has at most 40 fields, and a choice field at most 50 options. **Save card
 
 ### Deleting a type
 
-**Delete card type** removes the type and its fields.
+**Delete card type** removes the type and its fields. A type that cards still use cannot be deleted; delete its cards first.
+
+## Cards
+
+Cards are listed under **Content → Cards**. Choose a **Card type** and a language and select **New card** to open the editor. The list shows your own cards; staff can switch to **All cards**.
+
+Cards follow the same workflow as posts: each language is a translation with its own draft, revisions, submission for review, scheduling and publishing, and moderators can hide a card. Cards never appear in the post list, on the blog or in the post API.
+
+### The card tab
+
+The editor opens a card on the **Card** tab, next to **Details**, **SEO** and **Settings**.
+
+- **Fields of this translation** holds the fields with a separate value per language. They are saved with the draft, like the title and the content, and become live when the translation is published.
+- **Fields shared by all translations** holds every other field. **Save card fields** stores them for all translations at once.
+- **Gallery** holds up to 20 images from the media library in the order they are shown. The **Cover image** under **Settings** is the thumbnail of the card.
+
+While a translation is live and the author's changes need approval, the shared fields and the gallery are locked, just like the post settings.
+
+### Publishing
+
+A card can be published or submitted for review once it has a title and every required field, shared or translated, has a value. The content, the excerpt and the meta description are optional for cards. The editor lists what is missing and opens the **Card** tab when you select a field.
+
+Publishing and the other workflow changes send the `card.*` [webhook events](webhooks.md#events) instead of the `post.*` events.

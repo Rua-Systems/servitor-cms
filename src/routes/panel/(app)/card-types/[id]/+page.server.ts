@@ -82,6 +82,10 @@ export const actions: Actions = {
 			error(404, { message: 'Not found' });
 		}
 
+		if (result === 'in_use') {
+			return fail(400, { error: result });
+		}
+
 		redirect(303, PANEL_ROUTES.cardTypes);
 	}
 };

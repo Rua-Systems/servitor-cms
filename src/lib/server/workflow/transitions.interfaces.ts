@@ -1,5 +1,5 @@
 import type { TranslationStatus } from '../../constants/content';
-import type { WebhookEvent } from '../../constants/webhooks';
+import type { PostWebhookEvent } from '../../constants/webhooks';
 
 export interface WorkflowState {
 	status: TranslationStatus;
@@ -25,7 +25,7 @@ export type RevisionReview = 'pending' | 'approved' | 'rejected';
 
 export interface WorkflowChange {
 	next: WorkflowState;
-	event: WebhookEvent | null;
+	event: PostWebhookEvent | null;
 	audit: WorkflowAuditAction;
 	review: RevisionReview | null;
 	reviewedRevisionId: string | null;

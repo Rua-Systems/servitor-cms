@@ -1,4 +1,5 @@
 import { and, desc, eq, inArray, max, ne } from 'drizzle-orm';
+import { parseStoredTranslatedValues, serializeCardValues } from '../cards/card-values';
 import type { DatabaseExecutor } from '../db';
 import { postRevisionMedia, postRevisions } from '../db/schema';
 import type { RevisionPayload, TranslationPointers } from './revision-store.interfaces';
@@ -72,7 +73,8 @@ export function readRevisionPayload(
 		contentText: row.contentText,
 		readingTimeMinutes: row.readingTimeMinutes,
 		tags: tagNamesOf(tx, [revisionId]).get(revisionId) ?? [],
-		mediaIds
+		mediaIds,
+		cardValues: parseStoredTranslatedValues(row.cardValuesJson)
 	};
 }
 
@@ -85,6 +87,7 @@ export function samePayload(first: RevisionPayload, second: RevisionPayload): bo
 		first.metaDescription === second.metaDescription &&
 		first.ogMediaId === second.ogMediaId &&
 		first.contentJson === second.contentJson &&
+		serializeCardValues(first.cardValues) === serializeCardValues(second.cardValues) &&
 		sameNames(first.tags, second.tags)
 	);
 }
@@ -166,7 +169,8 @@ function revisionColumns(payload: RevisionPayload) {
 		contentJson: payload.contentJson,
 		contentHtml: payload.contentHtml,
 		contentText: payload.contentText,
-		readingTimeMinutes: payload.readingTimeMinutes
+		readingTimeMinutes: payload.readingTimeMinutes,
+		cardValuesJson: serializeCardValues(payload.cardValues)
 	};
 }
 

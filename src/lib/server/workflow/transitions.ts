@@ -1,4 +1,4 @@
-import type { WebhookEvent } from '../../constants/webhooks';
+import type { PostWebhookEvent } from '../../constants/webhooks';
 import type {
 	WorkflowChange,
 	WorkflowCommand,
@@ -128,7 +128,7 @@ function unpublish(state: WorkflowState): WorkflowOutcome {
 		return { status: 'not_allowed' };
 	}
 
-	let event: WebhookEvent | null = null;
+	let event: PostWebhookEvent | null = null;
 
 	if (state.status === 'published') {
 		event = 'post.unpublished';
@@ -189,7 +189,7 @@ function makeLive(
 		};
 	}
 
-	let event: WebhookEvent = 'post.published';
+	let event: PostWebhookEvent = 'post.published';
 
 	if (state.status === 'published') {
 		event = 'post.updated';

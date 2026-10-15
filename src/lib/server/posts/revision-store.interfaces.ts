@@ -1,3 +1,5 @@
+import type { TranslatedCardValues } from '../../modules/interfaces/cards.interfaces';
+
 export interface RevisionPayload {
 	title: string;
 	slug: string;
@@ -11,6 +13,7 @@ export interface RevisionPayload {
 	readingTimeMinutes: number;
 	tags: string[];
 	mediaIds: string[];
+	cardValues: TranslatedCardValues;
 }
 
 export interface TranslationPointers {

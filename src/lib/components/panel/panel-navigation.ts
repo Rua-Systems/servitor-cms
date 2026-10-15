@@ -7,6 +7,7 @@ import LayoutTemplate from '@lucide/svelte/icons/layout-template';
 import Globe from '@lucide/svelte/icons/globe';
 import Images from '@lucide/svelte/icons/images';
 import KeyRound from '@lucide/svelte/icons/key-round';
+import LayoutGrid from '@lucide/svelte/icons/layout-grid';
 import Languages from '@lucide/svelte/icons/languages';
 import LayoutDashboard from '@lucide/svelte/icons/layout-dashboard';
 import ScrollText from '@lucide/svelte/icons/scroll-text';
@@ -51,6 +52,13 @@ export function panelNavigation(access: PanelNavigationAccess): NavigationGroup[
 			label: m.nav_posts(),
 			icon: FileText,
 			activePrefix: resolve('/panel/posts'),
+			exact: false
+		},
+		{
+			href: resolve('/panel/cards'),
+			label: m.nav_cards(),
+			icon: LayoutGrid,
+			activePrefix: resolve('/panel/cards'),
 			exact: false
 		},
 		{

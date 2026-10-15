@@ -1,4 +1,4 @@
-import { and, asc, count, desc, eq, inArray, isNotNull, type SQL } from 'drizzle-orm';
+import { and, asc, count, desc, eq, inArray, isNotNull, isNull, type SQL } from 'drizzle-orm';
 import { recordAuditEntry } from '../audit/audit-log';
 import type { AuthUser } from '../auth/auth';
 import type { AuthRequest } from '../auth/auth-request.interfaces';
@@ -6,6 +6,7 @@ import { emptyContentDocument } from '../content/content-schema';
 import { renderContentDocument } from '../content/render-content';
 import type { AppDatabase, DatabaseExecutor } from '../db';
 import {
+	cardTypes,
 	categories,
 	contentLanguages,
 	postRevisions,
@@ -21,6 +22,7 @@ import { enqueuePostEvent } from '../webhooks/outbox';
 import type {
 	PostCreateResult,
 	PostDeleteResult,
+	PostKind,
 	PostListItem,
 	PostListPage,
 	PostRecord,
@@ -43,6 +45,7 @@ export function findPost(db: DatabaseExecutor, postId: string): PostRecord | nul
 			ownerName: user.name,
 			categoryId: posts.categoryId,
 			coverMediaId: posts.coverMediaId,
+			cardTypeId: posts.cardTypeId,
 			hiddenByModerator: posts.hiddenByModerator,
 			hiddenReason: posts.hiddenReason,
 			createdAt: posts.createdAt,
@@ -168,9 +171,10 @@ export function listPosts(
 	db: AppDatabase,
 	actor: AuthUser,
 	includeOthers: boolean,
-	requestedPage: number
+	requestedPage: number,
+	kind: PostKind = 'post'
 ): PostListPage {
-	const filter = listFilter(actor, includeOthers);
+	const filter = and(listFilter(actor, includeOthers), kindFilter(kind));
 	const total = db.select({ total: count() }).from(posts).where(filter).get()?.total ?? 0;
 	const pageCount = Math.max(1, Math.ceil(total / POST_PAGE_SIZE));
 	const page = Math.min(Math.max(1, requestedPage), pageCount);
@@ -180,11 +184,13 @@ export function listPosts(
 			ownerId: posts.ownerId,
 			ownerName: user.name,
 			coverMediaId: posts.coverMediaId,
+			cardTypeName: cardTypes.name,
 			hiddenByModerator: posts.hiddenByModerator,
 			updatedAt: posts.updatedAt
 		})
 		.from(posts)
 		.innerJoin(user, eq(user.id, posts.ownerId))
+		.leftJoin(cardTypes, eq(cardTypes.id, posts.cardTypeId))
 		.where(filter)
 		.orderBy(desc(posts.updatedAt), desc(posts.id))
 		.limit(POST_PAGE_SIZE)
@@ -325,6 +331,14 @@ export function canViewPost(actor: AuthUser, post: PostRecord): boolean {
 	return can(actor, 'post.view', postSubject(post));
 }
 
+function kindFilter(kind: PostKind): SQL {
+	if (kind === 'card') {
+		return isNotNull(posts.cardTypeId);
+	}
+
+	return isNull(posts.cardTypeId);
+}
+
 function listFilter(actor: AuthUser, includeOthers: boolean): SQL | undefined {
 	requirePermission(actor, 'post.list', null);
 
@@ -337,7 +351,7 @@ function listFilter(actor: AuthUser, includeOthers: boolean): SQL | undefined {
 	return undefined;
 }
 
-function createTranslationRow(
+export function createTranslationRow(
 	tx: DatabaseExecutor,
 	postId: string,
 	languageCode: string,
@@ -365,7 +379,8 @@ function createTranslationRow(
 		contentText: rendered.content.text,
 		readingTimeMinutes: rendered.content.readingTimeMinutes,
 		tags: [],
-		mediaIds: []
+		mediaIds: [],
+		cardValues: {}
 	});
 
 	tx.update(postTranslations)
@@ -396,7 +411,7 @@ function workingTitles(
 	);
 }
 
-function isEnabledLanguage(db: DatabaseExecutor, languageCode: string): boolean {
+export function isEnabledLanguage(db: DatabaseExecutor, languageCode: string): boolean {
 	const row = db
 		.select({ code: contentLanguages.code })
 		.from(contentLanguages)

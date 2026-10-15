@@ -25,6 +25,8 @@ An installation can have up to 50 webhooks. The list shows for each webhook whet
 | `post.unhidden`    | A moderator made a post visible again.                             |
 | `post.deleted`     | A post was deleted.                                                |
 
+Cards send the same events with the `card.` prefix: `card.published`, `card.updated`, `card.unpublished`, `card.hidden`, `card.unhidden` and `card.deleted`. A webhook receives only the events it subscribes to, so a site that renders posts is not notified about cards.
+
 Changes to drafts and submissions do not send events, because readers cannot see them.
 
 ## The request
@@ -52,6 +54,20 @@ The body:
 ```
 
 `languages` and `slugs` describe the translations the event concerns. Fetch the post with `GET /api/v1/posts/{post_id}` when you need its content.
+
+The body of a card event has `card_id` and `card_type`, the key of the card type, instead of `post_id`:
+
+```json
+{
+  "event": "card.published",
+  "delivery_id": "5a3e0c1d-2b4f-4c8e-9d7a-1f6b2c3d4e5f",
+  "timestamp": "2026-10-16T12:00:00.000Z",
+  "card_id": "c2f4a6b8-1d3e-4f50-8a7b-9c0d1e2f3a4b",
+  "card_type": "product",
+  "languages": ["en"],
+  "slugs": { "en": "desk-lamp" }
+}
+```
 
 ## Verifying the signature
 

@@ -8,6 +8,7 @@ import {
 	POST_TITLE_MAX_LENGTH,
 	TAG_INPUT_MAX_LENGTH
 } from '../../constants/content';
+import { readRawCardValues } from '../cards/card-values';
 import { MAX_SLUG_LENGTH } from '../content/slugs';
 import { isLanguageTag, MAX_LANGUAGE_TAG_LENGTH } from '../languages/language-tags';
 import type { PostSettingsInput, TranslationDraftInput } from './posts.interfaces';
@@ -56,7 +57,8 @@ export function readDraftInput(
 		...parsed.data,
 		metaTitle: emptyToNull(parsed.data.metaTitle),
 		metaDescription: emptyToNull(parsed.data.metaDescription),
-		ogMediaId: emptyToNull(parsed.data.ogMediaId)
+		ogMediaId: emptyToNull(parsed.data.ogMediaId),
+		cardValues: readRawCardValues(fields)
 	};
 }
 

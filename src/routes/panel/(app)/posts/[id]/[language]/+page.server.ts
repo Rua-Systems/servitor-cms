@@ -1,9 +1,13 @@
 import { error, fail, redirect } from '@sveltejs/kit';
+import { z } from 'zod';
 import { resolve } from '$app/paths';
 import { createAuthRequest } from '$lib/server/auth/auth-request';
 import { requireActor } from '$lib/server/auth/actor';
+import { formCardValues, readRawCardValues } from '$lib/server/cards/card-values';
+import { findCardDetails, updateCardSettings } from '$lib/server/cards/cards';
+import { MAX_CARD_GALLERY_IMAGES } from '$lib/constants/cards';
 import { listCategories } from '$lib/server/categories/categories';
-import { readFormFields } from '$lib/server/http/form';
+import { formFields, formList, readFormFields } from '$lib/server/http/form';
 import { defaultLanguageCode, listContentLanguages } from '$lib/server/languages/languages';
 import { findMedia } from '$lib/server/media/media-library';
 import { can, requirePermission } from '$lib/server/permissions/permissions';
@@ -48,6 +52,8 @@ function editablePost(event: Pick<RequestEvent, 'locals' | 'params'>) {
 
 	return { user, post, postId, languageCode };
 }
+
+const galleryIdsSchema = z.array(z.uuid()).max(MAX_CARD_GALLERY_IMAGES + 1);
 
 function mediaPreview(id: string | null) {
 	if (id === null) {
@@ -114,6 +120,18 @@ export const load: PageServerLoad = (event) => {
 	}
 
 	const editor = loadTranslationEditor(runtime, user, translation);
+	const cardDetails = findCardDetails(runtime.db, post);
+	let card = null;
+
+	if (cardDetails !== null) {
+		card = {
+			type: cardDetails.type,
+			values: formCardValues(cardDetails.values),
+			gallery: cardDetails.galleryMediaIds
+				.map((id) => mediaPreview(id))
+				.filter((preview) => preview !== null)
+		};
+	}
 
 	return {
 		post: {
@@ -125,6 +143,7 @@ export const load: PageServerLoad = (event) => {
 			settingsLocked: postSettingsLocked(runtime.db, user, postId)
 		},
 		editor,
+		card,
 		ogMedia: mediaPreview(editor.draft.ogMediaId),
 		workflow: translationWorkflowView(runtime, user, post, translation),
 		translations: summarizeTranslations(runtime.db, listTranslations(runtime.db, [postId])),
@@ -215,6 +234,36 @@ export const actions: Actions = {
 
 		return { settingsSaved: true };
 	},
+	cardSettings: async (event) => {
+		const { user, postId } = editablePost(event);
+		const data = await event.request.formData();
+		const gallery = galleryIdsSchema.safeParse(
+			formList(data, 'gallery', MAX_CARD_GALLERY_IMAGES + 1)
+		);
+
+		if (!gallery.success) {
+			return fail(400, { error: 'invalid_input' as const, cardForm: true });
+		}
+
+		const result = updateCardSettings(getRuntime(), user, postId, {
+			values: readRawCardValues(formFields(data)),
+			galleryMediaIds: gallery.data
+		});
+
+		if (result.status === 'not_found') {
+			error(404, { message: 'Not found' });
+		}
+
+		if (result.status === 'invalid_card_value') {
+			return fail(400, { error: result.status, cardField: result.key, cardForm: true });
+		}
+
+		if (result.status !== 'saved') {
+			return fail(400, { error: result.status, cardForm: true });
+		}
+
+		return { cardSettingsSaved: true };
+	},
 	addTranslation: async (event) => {
 		const { user, postId } = editablePost(event);
 		const languageCode = readLanguageCode((await readFormFields(event.request)).languageCode);
@@ -236,11 +285,15 @@ export const actions: Actions = {
 		redirect(303, resolve(`/panel/posts/${postId}/${result.languageCode}`));
 	},
 	delete: (event) => {
-		const { user, postId } = editablePost(event);
+		const { user, post, postId } = editablePost(event);
 		const result = deletePost(getRuntime(), createAuthRequest(event), user, postId);
 
 		if (result === 'not_found') {
 			error(404, { message: 'Not found' });
+		}
+
+		if (post.cardTypeId !== null) {
+			redirect(303, resolve('/panel/cards'));
 		}
 
 		redirect(303, resolve('/panel/posts'));

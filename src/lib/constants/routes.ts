@@ -14,6 +14,7 @@ export const PANEL_ROUTES = {
 	twoFactor: '/panel/account/two-factor',
 	sessions: '/panel/account/sessions',
 	posts: '/panel/posts',
+	cards: '/panel/cards',
 	media: '/panel/media',
 	users: '/panel/users',
 	audit: '/panel/audit',

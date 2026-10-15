@@ -1,9 +1,9 @@
-import { and, asc, eq, ne } from 'drizzle-orm';
+import { and, asc, count, eq, isNotNull, ne } from 'drizzle-orm';
 import { recordAuditEntry } from '../audit/audit-log';
 import type { AuthUser } from '../auth/auth';
 import type { AuthRequest } from '../auth/auth-request.interfaces';
 import type { AppDatabase, DatabaseExecutor } from '../db';
-import { cardTypes } from '../db/schema';
+import { cardTypes, posts } from '../db/schema';
 import { requirePermission } from '../permissions/permissions';
 import type { Runtime } from '../runtime.interfaces';
 import { parseStoredCardFields } from './card-fields';
@@ -17,7 +17,14 @@ import type {
 type CardTypeRow = typeof cardTypes.$inferSelect;
 
 export function listCardTypes(db: AppDatabase): CardTypeView[] {
-	return db.select().from(cardTypes).orderBy(asc(cardTypes.name)).all().map(toView);
+	const usage = cardCounts(db);
+
+	return db
+		.select()
+		.from(cardTypes)
+		.orderBy(asc(cardTypes.name))
+		.all()
+		.map((row) => toView(row, usage.get(row.id) ?? 0));
 }
 
 export function findCardType(db: DatabaseExecutor, id: string): CardTypeView | null {
@@ -27,7 +34,7 @@ export function findCardType(db: DatabaseExecutor, id: string): CardTypeView | n
 		return null;
 	}
 
-	return toView(row);
+	return toView(row, cardCounts(db).get(row.id) ?? 0);
 }
 
 export function createCardType(
@@ -106,6 +113,10 @@ export function deleteCardType(
 		return 'not_found';
 	}
 
+	if (cardType.cardCount > 0) {
+		return 'in_use';
+	}
+
 	runtime.db.transaction((tx) => {
 		tx.delete(cardTypes).where(eq(cardTypes.id, id)).run();
 		audit(tx, request, actor, 'card_type.deleted', id, cardType);
@@ -114,15 +125,28 @@ export function deleteCardType(
 	return 'deleted';
 }
 
-function toView(row: CardTypeRow): CardTypeView {
+function toView(row: CardTypeRow, cardCount: number): CardTypeView {
 	return {
 		id: row.id,
 		key: row.key,
 		name: row.name,
 		fields: parseStoredCardFields(row.fieldsJson),
+		cardCount,
 		createdAt: row.createdAt,
 		updatedAt: row.updatedAt
 	};
+}
+
+function cardCounts(db: DatabaseExecutor): Map<string, number> {
+	return new Map(
+		db
+			.select({ cardTypeId: posts.cardTypeId, total: count() })
+			.from(posts)
+			.where(isNotNull(posts.cardTypeId))
+			.groupBy(posts.cardTypeId)
+			.all()
+			.map((row) => [row.cardTypeId ?? '', row.total])
+	);
 }
 
 function keyTaken(db: DatabaseExecutor, key: string, exceptId: string | null): boolean {
