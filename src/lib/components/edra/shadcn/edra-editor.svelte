@@ -45,6 +45,10 @@
 		}
 	};
 
+	const CARET_SCROLL_MARGIN = 240;
+
+	const caretScroll = { top: 0, right: 0, bottom: CARET_SCROLL_MARGIN, left: 0 };
+
 	const editor = useEditor({
 		extensions: editorExtensions(actions),
 		content: parseDocument(untrack(() => content)),
@@ -54,7 +58,9 @@
 				role: 'textbox',
 				'aria-multiline': 'true',
 				'aria-label': m.editor_content_label()
-			}
+			},
+			scrollThreshold: caretScroll,
+			scrollMargin: caretScroll
 		},
 		onUpdate: ({ editor: current }) => {
 			onChange(JSON.stringify(current.getJSON()));
