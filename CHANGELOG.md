@@ -8,6 +8,10 @@ All notable changes to Servitor CMS are listed here. Versions follow [Semantic V
 
 - Card types under **Content → Card types**: staff define the fields of a type, such as text, numbers, prices with a currency, choices, yes or no, links and dates, and start from a ready-made product structure or from an empty one. Each field can be required, and text fields can have a separate value per language.
 
+### Changed
+
+- The post editor leaves room below the text and scrolls before the cursor reaches the bottom of the screen, so the line you write can stay near the middle.
+
 ## 0.3.0 - 2026-10-06
 
 ### Added
