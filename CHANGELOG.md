@@ -2,12 +2,6 @@
 
 All notable changes to Servitor CMS are listed here. Versions follow [Semantic Versioning](https://semver.org/); before 1.0.0, a minor version may change configuration, the API or the data in incompatible ways, and its notes say so.
 
-## Unreleased
-
-### Changed
-
-- The post editor leaves room below the text and scrolls before the cursor reaches the bottom of the screen, so the line you write can stay near the middle.
-
 ## 0.3.0 - 2026-10-06
 
 ### Added
