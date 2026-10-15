@@ -27,6 +27,8 @@ export const MAX_CARD_FIELDS = 40;
 
 export const CARD_FIELD_KEY_PATTERN = /^[a-z][a-z0-9_]{0,39}$/;
 
+export const CARD_DATE_PATTERN = /^[0-9]{4}-[0-9]{2}-[0-9]{2}$/;
+
 export const CARD_FIELD_LABEL_MAX_LENGTH = 80;
 
 export const MAX_CARD_FIELD_OPTIONS = 50;

@@ -1,5 +1,7 @@
 import type { ApiContentFormat, ApiSortField, ApiSortOrder } from '../../constants/api';
+import type { CardFieldKind } from '../../constants/cards';
 import type { MediaVariant } from '../../constants/media';
+import type { CardFieldDefinition, CardValue } from '../../modules/interfaces/cards.interfaces';
 import type { PublicLanguage } from '../../modules/interfaces/public.interfaces';
 import type { DatabaseExecutor } from '../db';
 import type { ApiKeyContext } from './api-keys.interfaces';
@@ -134,4 +136,88 @@ export interface TranslationCandidate {
 	languageCode: string;
 	publishedAt: Date | null;
 	revisedAt: Date;
+}
+
+export interface ApiCardField {
+	key: string;
+	label: string;
+	kind: CardFieldKind;
+	required: boolean;
+	translatable: boolean;
+	options: string[];
+	currency: string | null;
+}
+
+export interface ApiCardTypeSummary {
+	id: string;
+	key: string;
+	name: string;
+}
+
+export interface ApiCardType extends ApiCardTypeSummary {
+	fields: ApiCardField[];
+	updated_at: string;
+}
+
+export interface ApiCardTranslation {
+	id: string;
+	language: string;
+	slug: string;
+	title: string;
+	excerpt: string;
+	meta_title: string | null;
+	meta_description: string | null;
+	og_image: ApiMedia | null;
+	tags: ApiTag[];
+	values: Record<string, string | null>;
+	published_at: string | null;
+	updated_at: string;
+	content_html?: string;
+	content_json?: unknown;
+}
+
+export interface ApiCard {
+	id: string;
+	type: ApiCardTypeSummary;
+	category: ApiCategory | null;
+	cover: ApiMedia | null;
+	gallery: ApiMedia[];
+	values: Record<string, CardValue | null>;
+	published_at: string | null;
+	updated_at: string;
+	translations: ApiCardTranslation[];
+}
+
+export interface ApiCardFieldFilter {
+	values: string[];
+	min: string | null;
+	max: string | null;
+}
+
+export type ApiCardSort =
+	{ by: 'date'; field: ApiSortField } | { by: 'field'; field: CardFieldDefinition };
+
+export interface ApiCardFilters {
+	languages: string[] | null;
+	fallback: boolean;
+	typeKey: string | null;
+	categoryId: string | null;
+	tagId: string | null;
+	search: string | null;
+	publishedFrom: Date | null;
+	publishedTo: Date | null;
+	fields: Record<string, ApiCardFieldFilter>;
+	sort: string;
+	order: ApiSortOrder;
+	page: number;
+	perPage: number;
+	contentFormat: ApiContentFormat;
+}
+
+export interface ApiCardTypeRecord {
+	id: string;
+	key: string;
+	name: string;
+	fields: CardFieldDefinition[];
+	updatedAt: Date;
 }

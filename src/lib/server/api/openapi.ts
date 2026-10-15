@@ -1,7 +1,10 @@
 import {
+	API_CARD_FIELD_SORT_PATTERN,
+	API_CARD_FILTER_VALUE_MAX_LENGTH,
 	API_CONTENT_FORMATS,
 	API_DEFAULT_PER_PAGE,
 	API_FALLBACK_MODES,
+	API_MAX_CARD_FIELD_FILTERS,
 	API_MAX_LANGUAGE_FILTERS,
 	API_MAX_PAGE,
 	API_MAX_PER_PAGE,
@@ -10,6 +13,7 @@ import {
 	API_SORT_FIELDS,
 	API_SORT_ORDERS
 } from '../../constants/api';
+import { CARD_FIELD_KINDS } from '../../constants/cards';
 import { MEDIA_VARIANTS } from '../../constants/media';
 
 const JSON_TYPE = 'application/json';
@@ -82,6 +86,44 @@ function pathParameter(name: string, description: string, schema: Record<string,
 const nullableString = { type: ['string', 'null'] };
 
 const dateTime = { type: 'string', format: 'date-time' };
+
+const nullableMedia = { oneOf: [ref('schemas', 'Media'), { type: 'null' }] };
+
+const translationProperties = {
+	id: { type: 'string', format: 'uuid' },
+	language: { type: 'string' },
+	slug: { type: 'string' },
+	title: { type: 'string' },
+	excerpt: { type: 'string' },
+	meta_title: nullableString,
+	meta_description: nullableString,
+	og_image: nullableMedia,
+	tags: { type: 'array', items: ref('schemas', 'Tag') },
+	published_at: { type: ['string', 'null'], format: 'date-time' },
+	updated_at: dateTime,
+	content_html: {
+		type: 'string',
+		description: 'Sanitized HTML. Present unless content_format is json.'
+	},
+	content_json: {
+		type: 'object',
+		description: 'Editor document. Present when content_format is json or both.'
+	}
+};
+
+const translationRequired = [
+	'id',
+	'language',
+	'slug',
+	'title',
+	'excerpt',
+	'meta_title',
+	'meta_description',
+	'og_image',
+	'tags',
+	'published_at',
+	'updated_at'
+];
 
 const schemas = {
 	Error: {
@@ -196,47 +238,15 @@ const schemas = {
 	},
 	Translation: {
 		type: 'object',
-		required: [
-			'id',
-			'language',
-			'slug',
-			'url',
-			'title',
-			'excerpt',
-			'meta_title',
-			'meta_description',
-			'og_image',
-			'tags',
-			'reading_time_minutes',
-			'published_at',
-			'updated_at'
-		],
+		required: [...translationRequired, 'url', 'reading_time_minutes'],
 		properties: {
-			id: { type: 'string', format: 'uuid' },
-			language: { type: 'string' },
-			slug: { type: 'string' },
+			...translationProperties,
 			url: {
 				type: ['string', 'null'],
 				format: 'uri',
 				description: 'Address on the public reading site, or null in headless mode.'
 			},
-			title: { type: 'string' },
-			excerpt: { type: 'string' },
-			meta_title: nullableString,
-			meta_description: nullableString,
-			og_image: { oneOf: [ref('schemas', 'Media'), { type: 'null' }] },
-			tags: { type: 'array', items: ref('schemas', 'Tag') },
-			reading_time_minutes: { type: 'integer', minimum: 0 },
-			published_at: { type: ['string', 'null'], format: 'date-time' },
-			updated_at: dateTime,
-			content_html: {
-				type: 'string',
-				description: 'Sanitized HTML. Present unless content_format is json.'
-			},
-			content_json: {
-				type: 'object',
-				description: 'Editor document. Present when content_format is json or both.'
-			}
+			reading_time_minutes: { type: 'integer', minimum: 0 }
 		}
 	},
 	Post: {
@@ -258,6 +268,94 @@ const schemas = {
 			published_at: { type: ['string', 'null'], format: 'date-time' },
 			updated_at: dateTime,
 			translations: { type: 'array', items: ref('schemas', 'Translation') }
+		}
+	},
+	CardField: {
+		type: 'object',
+		required: ['key', 'label', 'kind', 'required', 'translatable', 'options', 'currency'],
+		properties: {
+			key: { type: 'string' },
+			label: { type: 'string' },
+			kind: { type: 'string', enum: [...CARD_FIELD_KINDS] },
+			required: { type: 'boolean' },
+			translatable: {
+				type: 'boolean',
+				description: 'Whether each translation has its own value.'
+			},
+			options: {
+				type: 'array',
+				items: { type: 'string' },
+				description: 'The allowed values of a select field.'
+			},
+			currency: {
+				type: ['string', 'null'],
+				description: 'The currency of a price field, such as USD.'
+			}
+		}
+	},
+	CardTypeSummary: {
+		type: 'object',
+		required: ['id', 'key', 'name'],
+		properties: {
+			id: { type: 'string', format: 'uuid' },
+			key: { type: 'string' },
+			name: { type: 'string' }
+		}
+	},
+	CardType: {
+		allOf: [
+			ref('schemas', 'CardTypeSummary'),
+			{
+				type: 'object',
+				required: ['fields', 'updated_at'],
+				properties: {
+					fields: { type: 'array', items: ref('schemas', 'CardField') },
+					updated_at: dateTime
+				}
+			}
+		]
+	},
+	CardTranslation: {
+		type: 'object',
+		required: [...translationRequired, 'values'],
+		properties: {
+			...translationProperties,
+			values: {
+				type: 'object',
+				description:
+					'The fields with a value per language, keyed by field key; null when empty.',
+				additionalProperties: nullableString
+			}
+		}
+	},
+	Card: {
+		type: 'object',
+		required: [
+			'id',
+			'type',
+			'category',
+			'cover',
+			'gallery',
+			'values',
+			'published_at',
+			'updated_at',
+			'translations'
+		],
+		properties: {
+			id: { type: 'string', format: 'uuid' },
+			type: ref('schemas', 'CardTypeSummary'),
+			category: { oneOf: [ref('schemas', 'Category'), { type: 'null' }] },
+			cover: nullableMedia,
+			gallery: { type: 'array', items: ref('schemas', 'Media') },
+			values: {
+				type: 'object',
+				description:
+					'The fields shared by all translations, keyed by field key; null when empty.',
+				additionalProperties: { type: ['string', 'number', 'boolean', 'null'] }
+			},
+			published_at: { type: ['string', 'null'], format: 'date-time' },
+			updated_at: dateTime,
+			translations: { type: 'array', items: ref('schemas', 'CardTranslation') }
 		}
 	}
 };
@@ -407,6 +505,117 @@ const paths = {
 		],
 		itemOf('Post'),
 		true
+	),
+	'/cards': operation(
+		'listCards',
+		'List published cards with their translations',
+		[
+			queryParameter(
+				'lang',
+				'Only translations in these languages. Repeat the parameter or separate codes with commas.',
+				{
+					type: 'array',
+					items: { type: 'string' },
+					maxItems: API_MAX_LANGUAGE_FILTERS
+				}
+			),
+			queryParameter(
+				'type',
+				'Key of a card type. Needed for field filters and field sorting.',
+				{
+					type: 'string'
+				}
+			),
+			queryParameter('category', 'Category ID.', { type: 'string', format: 'uuid' }),
+			queryParameter('tag', 'Tag ID.', { type: 'string', format: 'uuid' }),
+			queryParameter('q', 'Full-text search over title, excerpt and content.', {
+				type: 'string',
+				maxLength: API_SEARCH_MAX_LENGTH
+			}),
+			queryParameter('published_from', 'Earliest publication date or date-time.', {
+				type: 'string'
+			}),
+			queryParameter('published_to', 'Latest publication date or date-time.', {
+				type: 'string'
+			}),
+			{
+				...queryParameter(
+					'field',
+					`Filters on shared fields of the card type: field[key]=value, with several values separated by commas, and field[key][min] and field[key][max] for numbers, prices and dates. At most ${API_MAX_CARD_FIELD_FILTERS} fields.`,
+					{
+						type: 'object',
+						additionalProperties: {
+							oneOf: [
+								{ type: 'string', maxLength: API_CARD_FILTER_VALUE_MAX_LENGTH },
+								{
+									type: 'object',
+									properties: {
+										min: { type: 'string' },
+										max: { type: 'string' }
+									}
+								}
+							]
+						}
+					}
+				),
+				style: 'deepObject',
+				explode: true
+			},
+			queryParameter(
+				'sort',
+				'Sort field: published_at, updated_at or field.<key> for a shared field of the card type. Cards without a value come last.',
+				{
+					type: 'string',
+					anyOf: [
+						{ enum: [...API_SORT_FIELDS] },
+						{ pattern: API_CARD_FIELD_SORT_PATTERN.source }
+					],
+					default: 'published_at'
+				}
+			),
+			queryParameter('order', 'Sort direction.', {
+				type: 'string',
+				enum: [...API_SORT_ORDERS],
+				default: 'desc'
+			}),
+			...pageParameters,
+			queryParameter(
+				'fallback',
+				'With default, cards without a translation in the requested languages return their default-language translation.',
+				{ type: 'string', enum: [...API_FALLBACK_MODES], default: 'none' }
+			),
+			ref('parameters', 'content_format')
+		],
+		listOf('Card'),
+		false
+	),
+	'/cards/{id}': operation(
+		'getCard',
+		'Get a card with all its published translations',
+		[
+			pathParameter('id', 'Card ID.', { type: 'string', format: 'uuid' }),
+			ref('parameters', 'content_format')
+		],
+		itemOf('Card'),
+		true
+	),
+	'/cards/by-slug/{lang}/{slug}': operation(
+		'getCardBySlug',
+		'Get a card by the slug of one of its translations',
+		[
+			pathParameter('lang', 'Language code of the translation.', { type: 'string' }),
+			pathParameter('slug', 'Slug of the translation.', { type: 'string' }),
+			ref('parameters', 'content_format')
+		],
+		itemOf('Card'),
+		true
+	),
+	'/card-types': operation(
+		'listCardTypes',
+		'List card types with their fields',
+		pageParameters,
+		listOf('CardType'),
+		false
 	),
 	'/languages': operation(
 		'listLanguages',

@@ -36,6 +36,10 @@ curl -H "Authorization: Bearer svt_your_key" "https://cms.example.com/api/v1/lan
 | `GET /api/v1/posts`                       | Posts with their published translations, paginated. |
 | `GET /api/v1/posts/{id}`                  | One post with all its published translations.       |
 | `GET /api/v1/posts/by-slug/{lang}/{slug}` | The same, looked up by the slug of one translation. |
+| `GET /api/v1/cards`                       | Cards with their published translations, paginated. |
+| `GET /api/v1/cards/{id}`                  | One card with all its published translations.       |
+| `GET /api/v1/cards/by-slug/{lang}/{slug}` | The same, looked up by the slug of one translation. |
+| `GET /api/v1/card-types`                  | Card types with their fields.                       |
 | `GET /api/v1/languages`                   | Enabled content languages.                          |
 | `GET /api/v1/categories`                  | Categories with their names and slugs per language. |
 | `GET /api/v1/tags?lang={code}`            | The tags of a language with their post counts.      |
@@ -61,7 +65,26 @@ Only `GET`, `HEAD` and `OPTIONS` are accepted; other methods get `405`. Every re
 | `fallback`                       | `default` includes posts that have no translation in the requested languages with their default-language translation. |
 | `content_format`                 | `html` (default), `json` for the editor document, or `both`.                                                          |
 
-Unknown parameters and invalid values are answered with `400 invalid_query`, so typos do not go unnoticed. The single-post endpoints accept `content_format`; the other lists accept `page` and `per_page`, and `tags` requires `lang`.
+Unknown parameters and invalid values are answered with `400 invalid_query`, so typos do not go unnoticed. The single-post and single-card endpoints accept `content_format`; the other lists accept `page` and `per_page`, and `tags` requires `lang`.
+
+### Listing cards
+
+[Cards](cards.md) are never returned by the post endpoints. `GET /api/v1/cards` accepts the parameters of the post list except `author`, and these:
+
+| Parameter                            | Meaning                                                                                                                                                |
+| ------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `type`                               | The key of a card type, such as `product`. `GET /api/v1/card-types` lists the keys.                                                                    |
+| `field[key]`                         | Only cards whose shared field `key` has this value. Separate several values with commas to match any of them. Yes-or-no fields take `true` or `false`. |
+| `field[key][min]`, `field[key][max]` | A range for number, price and date fields, including the limits. Dates are written like `2026-10-16`.                                                  |
+| `sort`                               | `published_at` (default), `updated_at`, or `field.key` to sort by a shared field. Cards without a value come last in both directions.                  |
+
+Field filters and field sorting need `type`, because the fields belong to the type. They work on fields shared by all translations; long texts and fields with a value per language cannot be filtered or sorted. A request with a field the type does not have, a choice that is not one of its options or a value of the wrong kind is answered with `400 invalid_query`. At most 20 fields can be filtered at once.
+
+For example, products under 50 dollars that are in stock, cheapest first:
+
+```text
+GET /api/v1/cards?type=product&field[availability]=in_stock&field[price][max]=50&sort=field.price&order=asc
+```
 
 ## Responses
 
@@ -121,6 +144,49 @@ Single items contain only `data`. A post looks like this:
 - `content_html` is sanitized HTML, ready to insert into a page. `content_json` is the editor document for applications that render content themselves.
 - Images, such as `cover`, `og_image` and `avatar`, are objects with `id`, `width`, `height`, `alt` (alternative text per language) and `variants` with absolute URLs, widths and heights for the sizes `480`, `960`, `1600` and `full`.
 - Dates are ISO 8601 in UTC.
+
+A card has its type, the fields shared by all translations in `values`, its `gallery` in order and, in each translation, the fields with a value per language. Fields without a value are `null`, and yes-or-no fields are `true` or `false`. Cards have no author, no public address and no reading time:
+
+```json
+{
+  "data": {
+    "id": "c2f4a6b8-1d3e-4f50-8a7b-9c0d1e2f3a4b",
+    "type": { "id": "5d1c7e3a-8f2b-4a6c-9e0d-1b2c3d4e5f60", "key": "product", "name": "Product" },
+    "category": null,
+    "cover": null,
+    "gallery": [],
+    "values": {
+      "sku": "LAMP-1",
+      "price": 49.5,
+      "sale_price": null,
+      "stock": 12,
+      "availability": "in_stock",
+      "brand": null
+    },
+    "published_at": "2026-10-16T09:00:00.000Z",
+    "updated_at": "2026-10-16T09:00:00.000Z",
+    "translations": [
+      {
+        "id": "8e7d6c5b-4a39-4281-9f0e-1d2c3b4a5f6e",
+        "language": "en",
+        "slug": "desk-lamp",
+        "title": "Desk lamp",
+        "excerpt": "A small lamp for long evenings.",
+        "meta_title": null,
+        "meta_description": null,
+        "og_image": null,
+        "tags": [],
+        "values": { "details": "Brass, 40 cm high." },
+        "published_at": "2026-10-16T09:00:00.000Z",
+        "updated_at": "2026-10-16T09:00:00.000Z",
+        "content_html": "<p>The lamp has a dimmer…</p>"
+      }
+    ]
+  }
+}
+```
+
+`GET /api/v1/card-types` returns each type with `id`, `key`, `name`, `updated_at` and its `fields` in order. Each field has `key`, `label`, `kind` (`text`, `long_text`, `number`, `price`, `select`, `boolean`, `url` or `date`), `required`, `translatable`, the `options` of a choice and the `currency` of a price.
 
 ## Errors
 

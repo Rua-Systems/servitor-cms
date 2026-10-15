@@ -2,12 +2,16 @@ import type { RequestEvent } from '@sveltejs/kit';
 import type { Runtime } from '../runtime.interfaces';
 import { isValidSlug } from '../content/slugs';
 import { ApiError, apiErrorResponse, notFoundError } from './api-errors';
+import { cardQueryValues } from './api-card-fields';
+import { findApiCard, findApiCardBySlug, listApiCardTypes, listApiCards } from './api-cards';
 import { handleApiRequest, languageInScope } from './api-handler';
 import { findApiPost, findApiPostBySlug, listApiPosts } from './api-posts';
-import { parseQuery, rejectKeyInQuery } from './api-query';
+import { parseQuery, parseQueryValues, rejectKeyInQuery } from './api-query';
 import { listApiAuthors, listApiCategories, listApiLanguages, listApiTags } from './api-resources';
 import { apiJson } from './api-response';
 import {
+	CARD_LIST_QUERY,
+	CARD_LIST_REPEATABLE,
 	EMPTY_QUERY,
 	LIST_QUERY,
 	POST_ID_PARAM,
@@ -109,6 +113,85 @@ export function postBySlugEndpoint(
 		if (result === null) {
 			throw notFoundError();
 		}
+
+		return apiJson(event.request, result.body, result.lastModified, headers);
+	});
+}
+
+export function cardsEndpoint(runtime: Runtime, event: ApiEvent): Response {
+	return handleApiRequest(runtime, event, (context, headers) => {
+		const query = parseQueryValues(
+			cardQueryValues(event.url, CARD_LIST_REPEATABLE),
+			CARD_LIST_QUERY
+		);
+		const result = listApiCards(context, {
+			languages: requestedLanguages(context, query.lang),
+			fallback: query.fallback === 'default',
+			typeKey: query.type ?? null,
+			categoryId: query.category ?? null,
+			tagId: query.tag ?? null,
+			search: query.q ?? null,
+			publishedFrom: query.published_from ?? null,
+			publishedTo: query.published_to ?? null,
+			fields: query.field ?? {},
+			sort: query.sort,
+			order: query.order,
+			page: query.page,
+			perPage: query.per_page,
+			contentFormat: query.content_format
+		});
+
+		return apiJson(event.request, result.body, result.lastModified, headers);
+	});
+}
+
+export function cardEndpoint(runtime: Runtime, event: ApiEvent, id: string): Response {
+	return handleApiRequest(runtime, event, (context, headers) => {
+		const query = parseQuery(event.url, POST_QUERY);
+		const cardId = POST_ID_PARAM.safeParse(id);
+
+		if (!cardId.success) {
+			throw notFoundError();
+		}
+
+		const result = findApiCard(context, cardId.data, query.content_format);
+
+		if (result === null) {
+			throw notFoundError();
+		}
+
+		return apiJson(event.request, result.body, result.lastModified, headers);
+	});
+}
+
+export function cardBySlugEndpoint(
+	runtime: Runtime,
+	event: ApiEvent,
+	language: string,
+	slug: string
+): Response {
+	return handleApiRequest(runtime, event, (context, headers) => {
+		const query = parseQuery(event.url, POST_QUERY);
+		const languageCode = languageInScope(context, language);
+
+		if (languageCode === null || !isValidSlug(slug)) {
+			throw notFoundError();
+		}
+
+		const result = findApiCardBySlug(context, languageCode, slug, query.content_format);
+
+		if (result === null) {
+			throw notFoundError();
+		}
+
+		return apiJson(event.request, result.body, result.lastModified, headers);
+	});
+}
+
+export function cardTypesEndpoint(runtime: Runtime, event: ApiEvent): Response {
+	return handleApiRequest(runtime, event, (context, headers) => {
+		const query = parseQuery(event.url, LIST_QUERY);
+		const result = listApiCardTypes(context, query.page, query.per_page);
 
 		return apiJson(event.request, result.body, result.lastModified, headers);
 	});
