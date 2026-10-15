@@ -2,7 +2,7 @@
 
 All notable changes to Servitor CMS are listed here. Versions follow [Semantic Versioning](https://semver.org/); before 1.0.0, a minor version may change configuration, the API or the data in incompatible ways, and its notes say so.
 
-## Unreleased
+## 0.4.0 - 2026-10-16
 
 ### Added
 
@@ -14,6 +14,12 @@ All notable changes to Servitor CMS are listed here. Versions follow [Semantic V
 ### Changed
 
 - The post editor leaves room below the text and scrolls before the cursor reaches the bottom of the screen, so the line you write can stay near the middle.
+
+### Upgrading
+
+- Set `SERVITOR_VERSION=0.4` in your `.env` and take a backup first. Three migrations run on start: they add the card types, the card fields of posts and revisions and the gallery, and rebuild the webhook delivery table to allow the card events. Waiting and failed deliveries and their attempts are kept.
+- Existing webhooks keep their events. Subscribe a webhook to the `card.*` events to be notified about cards.
+- The post endpoints of the API and the blog are unchanged and never return cards.
 
 ## 0.3.0 - 2026-10-06
 
