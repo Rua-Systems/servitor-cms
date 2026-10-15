@@ -302,3 +302,37 @@ test('publishing waits until the title, content, excerpt and meta description ar
 	await publish.click();
 	await expect(page).toHaveURL(/\?workflow=published$/);
 });
+
+test('the editor toolbar wraps instead of scrolling sideways', async ({ browser }) => {
+	const page = await newClient(browser, true);
+
+	await newPost(page);
+	await editorContent(page).click();
+	await page.keyboard.type('Several marks at once');
+	await page.keyboard.press('ControlOrMeta+a');
+
+	const toolbar = page.getByRole('toolbar', { name: 'Formatting' });
+
+	for (const name of ['Bold', 'Italic', 'Underline', 'Strikethrough']) {
+		const button = toolbar.getByRole('button', { name, exact: true });
+
+		await button.click();
+		await expect(button).toHaveAttribute('aria-pressed', 'true');
+	}
+
+	for (const width of [1440, 1024, 768, 390]) {
+		await page.setViewportSize({ width, height: 900 });
+
+		const overflow = await page.evaluate(() => {
+			const root = document.documentElement;
+			const bar = document.querySelector('[role="toolbar"]');
+
+			return {
+				page: root.scrollWidth - root.clientWidth,
+				toolbar: (bar?.scrollWidth ?? 0) - (bar?.clientWidth ?? 0)
+			};
+		});
+
+		expect(overflow, `at ${width} pixels`).toEqual({ page: 0, toolbar: 0 });
+	}
+});
