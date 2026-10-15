@@ -11,6 +11,10 @@ All notable changes to Servitor CMS are listed here. Versions follow [Semantic V
 - Webhook events for cards: `card.published`, `card.updated`, `card.unpublished`, `card.hidden`, `card.unhidden` and `card.deleted`, with `card_id` and `card_type` in the body.
 - Cards in the REST API: `GET /api/v1/cards` with filters for the type, category, tag and the values of shared fields, including ranges for numbers, prices and dates, and sorting by a field; `GET /api/v1/cards/{id}`, `GET /api/v1/cards/by-slug/{lang}/{slug}` and `GET /api/v1/card-types`. The OpenAPI document describes them.
 
+### Changed
+
+- The post editor leaves room below the text and scrolls before the cursor reaches the bottom of the screen, so the line you write can stay near the middle.
+
 ## 0.3.0 - 2026-10-06
 
 ### Added
