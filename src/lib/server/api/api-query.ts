@@ -53,7 +53,14 @@ export function parseQuery<TSchema extends z.ZodType>(
 	schema: TSchema,
 	repeatable: readonly string[] = []
 ): z.output<TSchema> {
-	const parsed = schema.safeParse(queryValues(url, repeatable));
+	return parseQueryValues(queryValues(url, repeatable), schema);
+}
+
+export function parseQueryValues<TSchema extends z.ZodType>(
+	values: Record<string, unknown>,
+	schema: TSchema
+): z.output<TSchema> {
+	const parsed = schema.safeParse(values);
 
 	if (!parsed.success) {
 		throw new ApiError(400, 'invalid_query', describeIssues(parsed.error.issues));

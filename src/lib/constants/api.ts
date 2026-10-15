@@ -40,6 +40,22 @@ export type ApiSortOrder = (typeof API_SORT_ORDERS)[number];
 
 export const API_FALLBACK_MODES = ['none', 'default'] as const;
 
+export const API_CARD_FIELD_PARAM = 'field';
+
+export const API_CARD_FIELD_BOUNDS = ['min', 'max'] as const;
+
+export type ApiCardFieldBound = (typeof API_CARD_FIELD_BOUNDS)[number];
+
+export const API_CARD_FIELD_SORT_PREFIX = 'field.';
+
+export const API_CARD_FIELD_SORT_PATTERN = /^field.[a-z][a-z0-9_]{0,39}$/;
+
+export const API_MAX_CARD_FIELD_FILTERS = 20;
+
+export const API_MAX_CARD_FILTER_VALUES = 50;
+
+export const API_CARD_FILTER_VALUE_MAX_LENGTH = 500;
+
 export const API_QUERY_KEY_NAMES = ['key', 'api_key', 'apikey', 'access_token', 'token'] as const;
 
 export const CORS_ORIGIN_MAX_LENGTH = 300;

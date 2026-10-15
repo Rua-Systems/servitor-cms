@@ -65,3 +65,7 @@ While a translation is live and the author's changes need approval, the shared f
 A card can be published or submitted for review once it has a title and every required field, shared or translated, has a value. The content, the excerpt and the meta description are optional for cards. The editor lists what is missing and opens the **Card** tab when you select a field.
 
 Publishing and the other workflow changes send the `card.*` [webhook events](webhooks.md#events) instead of the `post.*` events.
+
+## Cards in the API
+
+External sites read published cards with an API key from `GET /api/v1/cards`, filter them by type, category, tag and the values of shared fields, for example a price range or a choice, and sort them by a field. `GET /api/v1/card-types` describes the types and their fields. See [Listing cards](api.md#listing-cards) for the parameters and the response.

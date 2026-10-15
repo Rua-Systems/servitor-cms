@@ -9,6 +9,7 @@ All notable changes to Servitor CMS are listed here. Versions follow [Semantic V
 - Card types under **Content → Card types**: staff define the fields of a type, such as text, numbers, prices with a currency, choices, yes or no, links and dates, and start from a ready-made product structure or from an empty one. Each field can be required, and text fields can have a separate value per language.
 - Cards under **Content → Cards**: each card is created from a card type and written in the post editor, with the same translations, revisions, review, scheduling and moderation as posts. The new **Card** tab holds the fields of the type, with per-language values saved in the draft and shared values for all translations, and a gallery of up to 20 images. A card is published once it has a title and every required field. Cards stay out of the post list, the blog and the post API.
 - Webhook events for cards: `card.published`, `card.updated`, `card.unpublished`, `card.hidden`, `card.unhidden` and `card.deleted`, with `card_id` and `card_type` in the body.
+- Cards in the REST API: `GET /api/v1/cards` with filters for the type, category, tag and the values of shared fields, including ranges for numbers, prices and dates, and sorting by a field; `GET /api/v1/cards/{id}`, `GET /api/v1/cards/by-slug/{lang}/{slug}` and `GET /api/v1/card-types`. The OpenAPI document describes them.
 
 ## 0.3.0 - 2026-10-06
 

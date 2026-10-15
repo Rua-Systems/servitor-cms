@@ -1,4 +1,5 @@
 import {
+	CARD_DATE_PATTERN,
 	CARD_LONG_TEXT_MAX_LENGTH,
 	CARD_TEXT_MAX_LENGTH,
 	CARD_URL_MAX_LENGTH,
@@ -11,8 +12,6 @@ import type {
 	TranslatedCardValues
 } from '../../modules/interfaces/cards.interfaces';
 import type { CardValuesResult } from './card-values.interfaces';
-
-const DATE_PATTERN = /^[0-9]{4}-[0-9]{2}-[0-9]{2}$/;
 
 const MAX_RAW_VALUES = 100;
 
@@ -218,7 +217,7 @@ function urlValue(value: string): string | 'invalid' {
 }
 
 function dateValue(value: string): string | 'invalid' {
-	if (!DATE_PATTERN.test(value)) {
+	if (!CARD_DATE_PATTERN.test(value)) {
 		return 'invalid';
 	}
 

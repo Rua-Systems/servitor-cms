@@ -11,6 +11,7 @@ import {
 	user,
 	userProfiles
 } from '../db/schema';
+import type { PostKind } from '../posts/posts.interfaces';
 import { taggedWith } from '../public/public-posts';
 import { publiclyVisible } from '../public/visibility';
 import { apiMediaMap, mediaFrom } from './api-media';
@@ -29,9 +30,9 @@ import type {
 	TranslationCandidate
 } from './api.interfaces';
 
-export function scopeConditions(context: ApiRequestContext): SQL[] {
+export function scopeConditions(context: ApiRequestContext, kind: PostKind = 'post'): SQL[] {
 	const conditions = [
-		publiclyVisible(context.db),
+		publiclyVisible(context.db, kind),
 		inArray(
 			postTranslations.languageCode,
 			context.languages.map((language) => language.code)
@@ -45,7 +46,11 @@ export function scopeConditions(context: ApiRequestContext): SQL[] {
 	return conditions;
 }
 
-export function selectCandidates(context: ApiRequestContext, extra: SQL[]): TranslationCandidate[] {
+export function selectCandidates(
+	context: ApiRequestContext,
+	extra: SQL[],
+	kind: PostKind = 'post'
+): TranslationCandidate[] {
 	return context.db
 		.select({
 			translationId: postTranslations.id,
@@ -57,7 +62,7 @@ export function selectCandidates(context: ApiRequestContext, extra: SQL[]): Tran
 		.from(postTranslations)
 		.innerJoin(posts, eq(posts.id, postTranslations.postId))
 		.innerJoin(postRevisions, eq(postRevisions.id, postTranslations.liveRevisionId))
-		.where(and(...scopeConditions(context), ...extra))
+		.where(and(...scopeConditions(context, kind), ...extra))
 		.all();
 }
 
@@ -156,7 +161,7 @@ function filterConditions(context: ApiRequestContext, filters: ApiPostFilters): 
 	return conditions;
 }
 
-function groupByPost(rows: TranslationCandidate[]): Map<string, TranslationCandidate[]> {
+export function groupByPost(rows: TranslationCandidate[]): Map<string, TranslationCandidate[]> {
 	const groups = new Map<string, TranslationCandidate[]>();
 
 	for (const row of rows) {
@@ -166,10 +171,11 @@ function groupByPost(rows: TranslationCandidate[]): Map<string, TranslationCandi
 	return groups;
 }
 
-function chooseTranslations(
+export function chooseTranslations(
 	context: ApiRequestContext,
 	groups: Map<string, TranslationCandidate[]>,
-	filters: ApiPostFilters
+	filters: Pick<ApiPostFilters, 'languages' | 'fallback'>,
+	kind: PostKind = 'post'
 ): Map<string, TranslationCandidate[]> {
 	if (filters.languages === null) {
 		return groups;
@@ -192,7 +198,7 @@ function chooseTranslations(
 			continue;
 		}
 
-		published ??= publishedLanguages(context);
+		published ??= publishedLanguages(context, kind);
 
 		const languages = published.get(postId) ?? new Set<string>();
 
@@ -210,14 +216,14 @@ function chooseTranslations(
 	return chosen;
 }
 
-function publishedLanguages(context: ApiRequestContext): Map<string, Set<string>> {
+function publishedLanguages(context: ApiRequestContext, kind: PostKind): Map<string, Set<string>> {
 	const languages = new Map<string, Set<string>>();
 
 	for (const row of context.db
 		.select({ postId: postTranslations.postId, languageCode: postTranslations.languageCode })
 		.from(postTranslations)
 		.innerJoin(posts, eq(posts.id, postTranslations.postId))
-		.where(and(...scopeConditions(context)))
+		.where(and(...scopeConditions(context, kind)))
 		.all()) {
 		languages.set(row.postId, (languages.get(row.postId) ?? new Set()).add(row.languageCode));
 	}
@@ -225,7 +231,7 @@ function publishedLanguages(context: ApiRequestContext): Map<string, Set<string>
 	return languages;
 }
 
-function sortValue(rows: TranslationCandidate[], sort: ApiSortField): number {
+export function sortValue(rows: TranslationCandidate[], sort: ApiSortField): number {
 	if (sort === 'updated_at') {
 		return Math.max(...rows.map((row) => modifiedAt(row).getTime()));
 	}
@@ -233,7 +239,7 @@ function sortValue(rows: TranslationCandidate[], sort: ApiSortField): number {
 	return Math.min(...rows.map((row) => row.publishedAt?.getTime() ?? Number.MAX_SAFE_INTEGER));
 }
 
-function sortPosts(
+export function sortPosts(
 	entries: [string, TranslationCandidate[]][],
 	sort: ApiSortField,
 	order: ApiSortOrder
@@ -254,7 +260,7 @@ function sortPosts(
 		.map(({ entry }) => entry);
 }
 
-function buildPosts(
+export function buildPosts(
 	context: ApiRequestContext,
 	entries: [string, TranslationCandidate[]][],
 	contentFormat: ApiContentFormat
@@ -407,7 +413,10 @@ function publicUrl(
 	return absoluteUrl(context.origin, blogPostPath(languageCode, slug));
 }
 
-function revisionTags(context: ApiRequestContext, revisionIds: string[]): Map<string, ApiTag[]> {
+export function revisionTags(
+	context: ApiRequestContext,
+	revisionIds: string[]
+): Map<string, ApiTag[]> {
 	const result = new Map<string, ApiTag[]>();
 
 	if (revisionIds.length === 0) {
