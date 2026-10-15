@@ -10,6 +10,10 @@ All notable changes to Servitor CMS are listed here. Versions follow [Semantic V
 - Cards under **Content → Cards**: each card is created from a card type and written in the post editor, with the same translations, revisions, review, scheduling and moderation as posts. The new **Card** tab holds the fields of the type, with per-language values saved in the draft and shared values for all translations, and a gallery of up to 20 images. A card is published once it has a title and every required field. Cards stay out of the post list, the blog and the post API.
 - Webhook events for cards: `card.published`, `card.updated`, `card.unpublished`, `card.hidden`, `card.unhidden` and `card.deleted`, with `card_id` and `card_type` in the body.
 
+### Changed
+
+- The post editor leaves room below the text and scrolls before the cursor reaches the bottom of the screen, so the line you write can stay near the middle.
+
 ## 0.3.0 - 2026-10-06
 
 ### Added
