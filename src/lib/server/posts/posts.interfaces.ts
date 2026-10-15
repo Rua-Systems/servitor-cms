@@ -1,5 +1,8 @@
 import type { TranslationStatus } from '../../constants/content';
 import type { UserRole } from '../../constants/users';
+import type { TranslatedCardValues } from '../../modules/interfaces/cards.interfaces';
+
+export type PostKind = 'post' | 'card';
 
 export interface PostRecord {
 	id: string;
@@ -8,6 +11,7 @@ export interface PostRecord {
 	ownerName: string;
 	categoryId: string | null;
 	coverMediaId: string | null;
+	cardTypeId: string | null;
 	hiddenByModerator: boolean;
 	hiddenReason: string | null;
 	createdAt: Date;
@@ -42,6 +46,7 @@ export interface PostListItem {
 	ownerName: string;
 	own: boolean;
 	coverMediaId: string | null;
+	cardTypeName: string | null;
 	hiddenByModerator: boolean;
 	translations: TranslationSummary[];
 	updatedAt: Date;
@@ -68,6 +73,7 @@ export interface TranslationDraftInput {
 	ogMediaId: string | null;
 	tags: string;
 	content: string;
+	cardValues: Record<string, string>;
 	version: number;
 }
 
@@ -80,6 +86,7 @@ export interface TranslationDraftView {
 	ogMediaId: string | null;
 	tags: string[];
 	content: string;
+	cardValues: TranslatedCardValues;
 	readingTimeMinutes: number;
 	version: number;
 	updatedAt: Date;
@@ -126,6 +133,7 @@ export type DraftSaveResult =
 	| { status: 'title_required' }
 	| { status: 'invalid_media' }
 	| { status: 'too_many_tags' }
-	| { status: 'tag_too_long' };
+	| { status: 'tag_too_long' }
+	| { status: 'invalid_card_value' };
 
 export type DraftSaveMode = 'autosave' | 'save';

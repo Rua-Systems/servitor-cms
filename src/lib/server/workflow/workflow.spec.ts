@@ -119,6 +119,7 @@ function draft(postId: string, owner: AuthUser, overrides: Partial<TranslationDr
 		ogMediaId: current.ogMediaId,
 		tags: current.tags.join(', '),
 		content: current.content,
+		cardValues: current.cardValues,
 		version: current.version,
 		...overrides
 	};

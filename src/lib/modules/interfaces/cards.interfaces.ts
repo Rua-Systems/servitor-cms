@@ -9,3 +9,9 @@ export interface CardFieldDefinition {
 	options: string[];
 	currency: string | null;
 }
+
+export type CardValue = string | number | boolean;
+
+export type CardValues = Record<string, CardValue>;
+
+export type TranslatedCardValues = Record<string, string>;

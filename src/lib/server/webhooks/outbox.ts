@@ -1,15 +1,33 @@
 import { eq } from 'drizzle-orm';
-import type { WebhookEvent } from '../../constants/webhooks';
+import type { PostWebhookEvent, WebhookEvent } from '../../constants/webhooks';
 import type { DatabaseExecutor } from '../db';
-import { webhookDeliveries, webhooks } from '../db/schema';
+import { cardTypes, posts, webhookDeliveries, webhooks } from '../db/schema';
 import type { PostEventTarget } from './outbox.interfaces';
+
+const CARD_EVENTS: Record<PostWebhookEvent, WebhookEvent> = {
+	'post.published': 'card.published',
+	'post.updated': 'card.updated',
+	'post.unpublished': 'card.unpublished',
+	'post.hidden': 'card.hidden',
+	'post.unhidden': 'card.unhidden',
+	'post.deleted': 'card.deleted'
+};
 
 export function enqueuePostEvent(
 	tx: DatabaseExecutor,
-	event: WebhookEvent,
+	postEvent: PostWebhookEvent,
 	target: PostEventTarget,
 	now: Date = new Date()
 ): number {
+	const cardType = cardTypeKeyOf(tx, target.postId);
+	let event: WebhookEvent = postEvent;
+	let subject: Record<string, string> = { post_id: target.postId };
+
+	if (cardType !== null) {
+		event = CARD_EVENTS[postEvent];
+		subject = { card_id: target.postId, card_type: cardType };
+	}
+
 	const subscribers = tx
 		.select({ id: webhooks.id, events: webhooks.events })
 		.from(webhooks)
@@ -23,7 +41,7 @@ export function enqueuePostEvent(
 			event,
 			delivery_id: id,
 			timestamp: now.toISOString(),
-			post_id: target.postId,
+			...subject,
 			languages: target.translations.map((translation) => translation.languageCode),
 			slugs: Object.fromEntries(
 				target.translations.map((translation) => [
@@ -47,4 +65,15 @@ export function enqueuePostEvent(
 	}
 
 	return subscribers.length;
+}
+
+function cardTypeKeyOf(tx: DatabaseExecutor, postId: string): string | null {
+	const row = tx
+		.select({ key: cardTypes.key })
+		.from(posts)
+		.innerJoin(cardTypes, eq(cardTypes.id, posts.cardTypeId))
+		.where(eq(posts.id, postId))
+		.get();
+
+	return row?.key ?? null;
 }

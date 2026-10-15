@@ -14,8 +14,20 @@ export function webhookEventDescription(event: WebhookEvent): string {
 			return m.webhooks_event_hidden();
 		case 'post.unhidden':
 			return m.webhooks_event_unhidden();
-		default:
+		case 'post.deleted':
 			return m.webhooks_event_deleted();
+		case 'card.published':
+			return m.webhooks_event_card_published();
+		case 'card.updated':
+			return m.webhooks_event_card_updated();
+		case 'card.unpublished':
+			return m.webhooks_event_card_unpublished();
+		case 'card.hidden':
+			return m.webhooks_event_card_hidden();
+		case 'card.unhidden':
+			return m.webhooks_event_card_unhidden();
+		default:
+			return m.webhooks_event_card_deleted();
 	}
 }
 

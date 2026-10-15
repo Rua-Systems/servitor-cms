@@ -11,6 +11,7 @@ import {
 } from 'drizzle-orm/sqlite-core';
 import { REVISION_REVIEW_STATES, TRANSLATION_STATUSES } from '../../../constants/content';
 import { user } from '../auth.schema';
+import { cardTypes } from './cards';
 import { categories } from './categories';
 import { createdAt, flag, timestamp, updatedAt, uuidPrimaryKey } from './columns';
 import { contentLanguages } from './languages';
@@ -25,6 +26,8 @@ export const posts = sqliteTable(
 			.references(() => user.id),
 		categoryId: text('category_id').references(() => categories.id),
 		coverMediaId: text('cover_media_id').references(() => media.id),
+		cardTypeId: text('card_type_id').references(() => cardTypes.id),
+		cardValuesJson: text('card_values_json').notNull().default('{}'),
 		hiddenByModerator: flag('hidden_by_moderator').notNull().default(false),
 		hiddenBy: text('hidden_by').references(() => user.id),
 		hiddenReason: text('hidden_reason'),
@@ -36,6 +39,7 @@ export const posts = sqliteTable(
 		index('posts_owner').on(table.ownerId),
 		index('posts_category').on(table.categoryId),
 		index('posts_cover_media').on(table.coverMediaId),
+		index('posts_card_type').on(table.cardTypeId),
 		check(
 			'posts_moderation',
 			sql`(hidden_by_moderator = 0 and hidden_by is null and hidden_reason is null and hidden_at is null) or (hidden_by_moderator = 1 and hidden_by is not null and hidden_reason is not null and hidden_at is not null)`
@@ -110,6 +114,7 @@ export const postRevisions = sqliteTable(
 		contentHtml: text('content_html').notNull(),
 		contentText: text('content_text').notNull(),
 		readingTimeMinutes: integer('reading_time_minutes').notNull(),
+		cardValuesJson: text('card_values_json').notNull().default('{}'),
 		reviewState: text('review_state', { enum: REVISION_REVIEW_STATES })
 			.notNull()
 			.default('none'),
@@ -177,5 +182,23 @@ export const postRevisionMedia = sqliteTable(
 	(table) => [
 		primaryKey({ columns: [table.revisionId, table.mediaId] }),
 		index('post_revision_media_media').on(table.mediaId)
+	]
+);
+
+export const postGallery = sqliteTable(
+	'post_gallery',
+	{
+		postId: text('post_id')
+			.notNull()
+			.references(() => posts.id, { onDelete: 'cascade' }),
+		mediaId: text('media_id')
+			.notNull()
+			.references(() => media.id),
+		position: integer('position').notNull()
+	},
+	(table) => [
+		primaryKey({ columns: [table.postId, table.mediaId] }),
+		index('post_gallery_media').on(table.mediaId),
+		check('post_gallery_position', sql`position >= 0`)
 	]
 );

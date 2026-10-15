@@ -13,6 +13,7 @@ function input(overrides: Partial<TranslationDraftInput>): TranslationDraftInput
 		ogMediaId: null,
 		tags: '',
 		content: paragraphs('Body'),
+		cardValues: {},
 		version: 1,
 		...overrides
 	};

@@ -5,6 +5,7 @@ export interface CardTypeView {
 	key: string;
 	name: string;
 	fields: CardFieldDefinition[];
+	cardCount: number;
 	createdAt: Date;
 	updatedAt: Date;
 }
@@ -32,4 +33,4 @@ export type CardTypeFormResult =
 export type CardTypeSaveResult =
 	{ status: 'saved'; id: string } | { status: 'not_found' } | { status: 'key_taken' };
 
-export type CardTypeDeleteResult = 'deleted' | 'not_found';
+export type CardTypeDeleteResult = 'deleted' | 'not_found' | 'in_use';

@@ -43,6 +43,20 @@
       "when": 1792101026794,
       "tag": "0005_card_types",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "6",
+      "when": 1792102051445,
+      "tag": "0006_cards",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "6",
+      "when": 1792103076192,
+      "tag": "0007_card_webhook_events",
+      "breakpoints": true
     }
   ]
 }

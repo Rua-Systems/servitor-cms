@@ -1,5 +1,7 @@
 import { eq } from 'drizzle-orm';
 import type { AuthUser } from '../auth/auth';
+import { findCardType } from '../cards/card-types';
+import { readTranslatedCardValues } from '../cards/card-values';
 import { emptyContentDocument } from '../content/content-schema';
 import { renderContent, renderContentDocument } from '../content/render-content';
 import type { RenderedContent } from '../content/render-content.interfaces';
@@ -27,6 +29,7 @@ import {
 	writeRevision
 } from './revision-store';
 import type { RevisionPayload, TranslationPointers } from './revision-store.interfaces';
+import type { TranslatedCardValues } from '../../modules/interfaces/cards.interfaces';
 import { parseTagInput } from './tags';
 
 export function loadTranslationEditor(
@@ -63,6 +66,7 @@ export function loadTranslationEditor(
 			ogMediaId: payload.ogMediaId,
 			tags: payload.tags,
 			content: payload.contentJson,
+			cardValues: payload.cardValues,
 			readingTimeMinutes: payload.readingTimeMinutes,
 			version: working.updatedAt.getTime(),
 			updatedAt: working.updatedAt
@@ -96,6 +100,12 @@ export function saveTranslationDraft(
 
 	if (tags.status !== 'ok') {
 		return { status: tags.status };
+	}
+
+	const cardValues = translatedCardValues(runtime.db, post.cardTypeId, input.cardValues);
+
+	if (cardValues === null) {
+		return { status: 'invalid_card_value' };
 	}
 
 	const rendered = renderContent(input.content);
@@ -151,7 +161,8 @@ export function saveTranslationDraft(
 			contentText: rendered.content.text,
 			readingTimeMinutes: rendered.content.readingTimeMinutes,
 			tags: tags.names,
-			mediaIds: rendered.content.mediaIds
+			mediaIds: rendered.content.mediaIds,
+			cardValues
 		};
 		const now = new Date();
 		const pointers: TranslationPointers = { ...translation, workingRevisionId };
@@ -242,6 +253,30 @@ function snapshot(
 	return insertRevision(tx, pointers.id, languageCode, authorId, payload);
 }
 
+function translatedCardValues(
+	db: DatabaseExecutor,
+	cardTypeId: string | null,
+	raw: Record<string, string>
+): TranslatedCardValues | null {
+	if (cardTypeId === null) {
+		return {};
+	}
+
+	const cardType = findCardType(db, cardTypeId);
+
+	if (cardType === null) {
+		return {};
+	}
+
+	const result = readTranslatedCardValues(cardType.fields, raw);
+
+	if (result.status !== 'ok') {
+		return null;
+	}
+
+	return result.values;
+}
+
 function revisionVersion(tx: DatabaseExecutor, revisionId: string): number {
 	const row = tx
 		.select({ updatedAt: postRevisions.updatedAt })
@@ -283,6 +318,7 @@ function emptyPayload(): RevisionPayload {
 		contentText: rendered.content.text,
 		readingTimeMinutes: rendered.content.readingTimeMinutes,
 		tags: [],
-		mediaIds: []
+		mediaIds: [],
+		cardValues: {}
 	};
 }

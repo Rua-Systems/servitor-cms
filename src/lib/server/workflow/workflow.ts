@@ -1,5 +1,6 @@
 import { and, desc, eq, inArray, lte } from 'drizzle-orm';
 import { recordAuditEntry } from '../audit/audit-log';
+import { cardPublishRequirement } from '../cards/cards';
 import type { AuthUser } from '../auth/auth';
 import type { AuthRequest } from '../auth/auth-request.interfaces';
 import type { DatabaseExecutor } from '../db';
@@ -13,6 +14,7 @@ import type {
 	TranslationRecord
 } from '../posts/posts.interfaces';
 import { missingPublishRequirement } from '../posts/publish-requirements';
+import type { PublishRequirementStatus } from '../posts/publish-requirements.interfaces';
 import { readRevisionPayload, samePayload } from '../posts/revision-store';
 import { saveTranslationDraft } from '../posts/translation-drafts';
 import type { Runtime } from '../runtime.interfaces';
@@ -48,7 +50,13 @@ export function publishFromEditor(
 	input: TranslationDraftInput,
 	scheduledAt: Date | null
 ): PublishResult {
-	const missing = missingPublishRequirement(input);
+	const current = findPost(runtime.db, postId);
+
+	if (current === null) {
+		return { status: 'not_found' };
+	}
+
+	const missing = publishRequirement(runtime, current, input);
 
 	if (missing !== null) {
 		return { status: missing };
@@ -202,6 +210,18 @@ export function publishDueTranslations(runtime: Runtime, now: Date = new Date())
 	}
 
 	return published;
+}
+
+function publishRequirement(
+	runtime: Runtime,
+	post: PostRecord,
+	input: TranslationDraftInput
+): PublishRequirementStatus | null {
+	if (post.cardTypeId !== null) {
+		return cardPublishRequirement(runtime.db, post, input);
+	}
+
+	return missingPublishRequirement(input);
 }
 
 export function translationWorkflowView(

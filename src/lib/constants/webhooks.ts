@@ -1,4 +1,4 @@
-export const WEBHOOK_EVENTS = [
+export const POST_WEBHOOK_EVENTS = [
 	'post.published',
 	'post.updated',
 	'post.unpublished',
@@ -6,6 +6,19 @@ export const WEBHOOK_EVENTS = [
 	'post.unhidden',
 	'post.deleted'
 ] as const;
+
+export type PostWebhookEvent = (typeof POST_WEBHOOK_EVENTS)[number];
+
+export const CARD_WEBHOOK_EVENTS = [
+	'card.published',
+	'card.updated',
+	'card.unpublished',
+	'card.hidden',
+	'card.unhidden',
+	'card.deleted'
+] as const;
+
+export const WEBHOOK_EVENTS = [...POST_WEBHOOK_EVENTS, ...CARD_WEBHOOK_EVENTS] as const;
 
 export type WebhookEvent = (typeof WEBHOOK_EVENTS)[number];
 

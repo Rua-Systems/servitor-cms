@@ -42,7 +42,7 @@ export const webhookDeliveries = sqliteTable(
 		index('webhook_deliveries_webhook').on(table.webhookId, table.createdAt),
 		check(
 			'webhook_deliveries_event',
-			sql`event in ('post.published', 'post.updated', 'post.unpublished', 'post.hidden', 'post.unhidden', 'post.deleted')`
+			sql`event in ('post.published', 'post.updated', 'post.unpublished', 'post.hidden', 'post.unhidden', 'post.deleted', 'card.published', 'card.updated', 'card.unpublished', 'card.hidden', 'card.unhidden', 'card.deleted')`
 		),
 		check(
 			'webhook_deliveries_status',

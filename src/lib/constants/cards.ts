@@ -38,3 +38,11 @@ export const CURRENCY_CODE_PATTERN = /^[A-Z]{3}$/;
 export const DEFAULT_CARD_CURRENCY = 'USD';
 
 export const MAX_CARD_GALLERY_IMAGES = 20;
+
+export const CARD_TEXT_MAX_LENGTH = 500;
+
+export const CARD_LONG_TEXT_MAX_LENGTH = 5_000;
+
+export const CARD_URL_MAX_LENGTH = 2_048;
+
+export const CARD_VALUE_FIELD_PREFIX = 'card:';

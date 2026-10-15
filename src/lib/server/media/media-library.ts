@@ -6,6 +6,7 @@ import {
 	contentLanguages,
 	media,
 	mediaAltTexts,
+	postGallery,
 	postRevisionMedia,
 	postRevisions,
 	posts,
@@ -305,6 +306,11 @@ export function mediaInUse(db: DatabaseExecutor, ids: string[]): Set<string> {
 			.select({ id: postRevisions.ogMediaId })
 			.from(postRevisions)
 			.where(and(isNotNull(postRevisions.ogMediaId), inArray(postRevisions.ogMediaId, ids)))
+			.all(),
+		db
+			.select({ id: postGallery.mediaId })
+			.from(postGallery)
+			.where(inArray(postGallery.mediaId, ids))
 			.all(),
 		db
 			.select({ id: posts.coverMediaId })

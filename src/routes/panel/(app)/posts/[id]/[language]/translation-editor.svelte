@@ -10,6 +10,8 @@
 	import { beforeNavigate } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
+	import CardGalleryField from '$lib/components/cards/card-gallery-field.svelte';
+	import CardValueInput from '$lib/components/cards/card-value-input.svelte';
 	import EdraEditor from '$lib/components/edra/shadcn/edra-editor.svelte';
 	import FormattedDate from '$lib/components/formatted-date.svelte';
 	import MediaField from '$lib/components/media/media-field.svelte';
@@ -38,7 +40,7 @@
 	import { cn } from '$lib/utils';
 	import { errorCodeOf, publishOutcomeOf, savedDraftOf, workflowNoticeOf } from './draft-results';
 	import { publishIssues, tabHasIssues } from './publish-readiness';
-	import type { PublishField, PublishIssue, SettingsTab } from './publish-readiness.interfaces';
+	import type { PublishIssue, SettingsTab } from './publish-readiness.interfaces';
 	import { localDateTimeValue, scheduleIso } from './schedule-input';
 	import type {
 		DraftSaveMode,
@@ -53,7 +55,9 @@
 
 	const ESCAPE_LAYERS = '[role="dialog"], [role="menu"], [role="listbox"]';
 
-	const settingsTabs: SettingsTab[] = ['details', 'seo', 'settings'];
+	const POST_TABS: SettingsTab[] = ['details', 'seo', 'settings'];
+
+	const CARD_TABS: SettingsTab[] = ['card', 'details', 'seo', 'settings'];
 
 	let { data, form }: TranslationEditorProps = $props();
 
@@ -61,6 +65,9 @@
 	const postId = initial.post.id;
 	const languageCode = initial.editor.languageCode;
 	const initialContent = initial.editor.draft.content;
+	const cardFields = initial.card?.type.fields ?? [];
+	const sharedCardFields = cardFields.filter((field) => !field.translatable);
+	const translatedCardFields = cardFields.filter((field) => field.translatable);
 
 	let title = $state(initial.editor.draft.title);
 	let slug = $state(initial.editor.draft.slug);
@@ -81,7 +88,10 @@
 	let editedSinceLoad = $state(false);
 	let focusMode = $state(false);
 	let hasContent = $state(hasDocumentContent(initialContent));
-	let settingsTab: SettingsTab = $state('details');
+	let settingsTab: SettingsTab = $state(untrack(() => initialTab()));
+	let cardValues: Record<string, string> = $state(
+		untrack(() => ({ ...initial.editor.draft.cardValues }))
+	);
 
 	let content = initialContent;
 	let version = initial.editor.draft.version;
@@ -109,15 +119,48 @@
 			label: categoryName(category.translations)
 		}))
 	]);
-	const formError = $derived(postErrorMessage(errorCodeOf(form)));
+	const cardForm = $derived(form !== null && form !== undefined && 'cardForm' in form);
+	const formError = $derived.by(() => {
+		if (cardForm) {
+			return null;
+		}
+
+		return postErrorMessage(errorCodeOf(form));
+	});
+	const cardError = $derived.by(() => {
+		if (!cardForm) {
+			return null;
+		}
+
+		return cardErrorMessage(errorCodeOf(form));
+	});
 	const settingsSaved = $derived(form !== null && form !== undefined && 'settingsSaved' in form);
+	const cardSettingsSaved = $derived(
+		form !== null && form !== undefined && 'cardSettingsSaved' in form
+	);
+	const settingsTabs = $derived.by(() => {
+		if (data.card !== null) {
+			return CARD_TABS;
+		}
+
+		return POST_TABS;
+	});
+	const cardReadiness = $derived.by(() => {
+		if (data.card === null) {
+			return null;
+		}
+
+		return { fields: cardFields, shared: data.card.values, translated: cardValues };
+	});
 	const restored = $derived(page.url.searchParams.has('restored'));
 	const editorPath = resolve(`/panel/posts/${postId}/${languageCode}`);
 	const workflow = $derived(data.workflow);
 	const workflowNotice = $derived(
 		workflowMessage(workflowNoticeOf(page.url.searchParams.get('workflow')))
 	);
-	const issues = $derived(publishIssues({ title, hasContent, excerpt, metaDescription }));
+	const issues = $derived(
+		publishIssues({ title, hasContent, excerpt, metaDescription, card: cardReadiness })
+	);
 	const canSchedule = $derived(workflow.publishedAt === null);
 	const canUnpublish = $derived(
 		workflow.status === 'published' || workflow.status === 'scheduled'
@@ -178,8 +221,18 @@
 		focusMode = false;
 	}
 
+	function initialTab(): SettingsTab {
+		if (initial.card !== null) {
+			return 'card';
+		}
+
+		return 'details';
+	}
+
 	function tabLabel(tab: SettingsTab): string {
 		switch (tab) {
+			case 'card':
+				return m.posts_tab_card();
 			case 'seo':
 				return m.posts_tab_seo();
 			case 'settings':
@@ -189,30 +242,68 @@
 		}
 	}
 
-	function fieldLabel(field: PublishField): string {
-		switch (field) {
+	function fieldLabel(issue: PublishIssue): string {
+		switch (issue.field) {
 			case 'title':
 				return m.posts_field_title();
 			case 'content':
 				return m.editor_content_label();
 			case 'excerpt':
 				return m.posts_field_excerpt();
+			case 'cardField':
+				return cardFieldLabel(issue.key);
 			default:
 				return m.posts_field_meta_description();
 		}
 	}
 
-	function fieldElement(field: PublishField): HTMLElement | null {
-		switch (field) {
+	function fieldElement(issue: PublishIssue): HTMLElement | null {
+		switch (issue.field) {
 			case 'title':
 				return document.getElementById('post-title');
 			case 'content':
 				return document.querySelector<HTMLElement>('.edra-content');
 			case 'excerpt':
 				return document.getElementById('post-excerpt');
+			case 'cardField':
+				return document.getElementById(cardFieldId(issue.key));
 			default:
 				return document.getElementById('post-meta-description');
 		}
+	}
+
+	function cardFieldId(key: string): string {
+		return `card-field-${key}`;
+	}
+
+	function cardFieldLabel(key: string): string {
+		return cardFields.find((field) => field.key === key)?.label ?? key;
+	}
+
+	function cardErrorMessage(code: string | undefined): string | null {
+		if (
+			code === 'invalid_card_value' &&
+			form !== null &&
+			form !== undefined &&
+			'cardField' in form
+		) {
+			return m.cards_error_invalid_value({ label: cardFieldLabel(String(form.cardField)) });
+		}
+
+		if (code === 'too_many_images') {
+			return m.cards_error_too_many_images();
+		}
+
+		if (code === 'locked') {
+			return m.cards_settings_locked();
+		}
+
+		return postErrorMessage(code);
+	}
+
+	function translatedCardChanged(key: string, value: string): void {
+		cardValues[key] = value;
+		changed();
 	}
 
 	async function showIssue(issue: PublishIssue): Promise<void> {
@@ -221,7 +312,7 @@
 		}
 
 		await tick();
-		fieldElement(issue.field)?.focus();
+		fieldElement(issue)?.focus();
 	}
 
 	function workflowMessage(notice: WorkflowNotice | null): string | null {
@@ -316,6 +407,10 @@
 		body.set('tags', tags);
 		body.set('content', content);
 		body.set('version', String(version));
+
+		for (const [key, value] of Object.entries(cardValues)) {
+			body.set(`card:${key}`, value);
+		}
 
 		return body;
 	}
@@ -461,6 +556,20 @@
 		saveError = postErrorMessage(code) ?? m.posts_error_generic();
 	}
 
+	const coverHint = $derived.by(() => {
+		if (data.card !== null) {
+			return m.cards_cover_hint();
+		}
+
+		return undefined;
+	});
+
+	const keepCardState: SubmitFunction = () => {
+		return async ({ update }) => {
+			await update({ reset: false });
+		};
+	};
+
 	const keepSettingsState: SubmitFunction = () => {
 		return async ({ update }) => {
 			await update({ reset: false, invalidateAll: false });
@@ -503,12 +612,21 @@
 <svelte:window onkeydown={leaveFocusMode} />
 <section class="grid gap-6">
 	<div class="grid gap-3">
-		<a
-			href={resolve('/panel/posts')}
-			class="text-sm text-muted-foreground underline-offset-4 hover:underline"
-		>
-			{m.posts_back()}
-		</a>
+		{#if data.card !== null}
+			<a
+				href={resolve('/panel/cards')}
+				class="text-sm text-muted-foreground underline-offset-4 hover:underline"
+			>
+				{m.cards_back()}
+			</a>
+		{:else}
+			<a
+				href={resolve('/panel/posts')}
+				class="text-sm text-muted-foreground underline-offset-4 hover:underline"
+			>
+				{m.posts_back()}
+			</a>
+		{/if}
 		<div class="flex flex-wrap items-center justify-between gap-3">
 			<h1 class="text-2xl font-semibold">{postTitle(title)}</h1>
 			<div class="flex flex-wrap items-center gap-3">
@@ -705,14 +823,14 @@
 						<div class="grid gap-1 text-sm" data-testid="publish-missing">
 							<p class="text-muted-foreground">{m.posts_publish_missing()}</p>
 							<ul class="flex flex-wrap gap-x-3 gap-y-1">
-								{#each issues as issue (issue.field)}
+								{#each issues as issue (`${issue.field}:${issue.key}`)}
 									<li>
 										<button
 											type="button"
 											class="text-destructive underline-offset-4 hover:underline"
 											onclick={() => showIssue(issue)}
 										>
-											{fieldLabel(issue.field)}
+											{fieldLabel(issue)}
 										</button>
 									</li>
 								{/each}
@@ -747,6 +865,77 @@
 								</Tabs.Trigger>
 							{/each}
 						</Tabs.List>
+						{#if data.card !== null}
+							<Tabs.Content value="card" class="grid gap-4 pt-2">
+								<p class="text-muted-foreground">
+									{m.cards_type({ name: data.card.type.name })}
+								</p>
+								{#if translatedCardFields.length > 0}
+									<div class="grid gap-4" lang={languageCode}>
+										<h3 class="text-sm font-semibold">
+											{m.cards_fields_translated()}
+										</h3>
+										{#each translatedCardFields as field (field.key)}
+											<CardValueInput
+												{field}
+												id={cardFieldId(field.key)}
+												value={cardValues[field.key] ?? ''}
+												onInput={(value) =>
+													translatedCardChanged(field.key, value)}
+												onBlur={flush}
+											/>
+										{/each}
+									</div>
+								{/if}
+								<form
+									method="POST"
+									action="?/cardSettings"
+									class="grid gap-4"
+									use:enhance={keepCardState}
+								>
+									<h3 class="text-sm font-semibold">{m.cards_fields_shared()}</h3>
+									{#each sharedCardFields as field (field.key)}
+										<CardValueInput
+											{field}
+											id={cardFieldId(field.key)}
+											name={`card:${field.key}`}
+											value={data.card.values[field.key] ?? ''}
+											disabled={data.post.settingsLocked}
+										/>
+									{/each}
+									<CardGalleryField
+										items={data.card.gallery}
+										{languageCode}
+										name="gallery"
+										disabled={data.post.settingsLocked}
+									/>
+									{#if data.post.settingsLocked}
+										<p class="text-xs text-muted-foreground">
+											{m.cards_settings_locked()}
+										</p>
+									{/if}
+									{#if cardSettingsSaved}
+										<p class="text-sm text-muted-foreground" role="status">
+											{m.cards_settings_saved()}
+										</p>
+									{/if}
+									{#if cardError !== null}
+										<p class="text-sm text-destructive" role="alert">
+											{cardError}
+										</p>
+									{/if}
+									<div>
+										<Button
+											type="submit"
+											variant="outline"
+											disabled={data.post.settingsLocked}
+										>
+											{m.cards_settings_save()}
+										</Button>
+									</div>
+								</form>
+							</Tabs.Content>
+						{/if}
 						<Tabs.Content value="details" class="grid gap-4 pt-2">
 							<div class="grid gap-2">
 								<Label for="post-slug">{m.posts_field_slug()}</Label>
@@ -846,6 +1035,7 @@
 								<MediaField
 									id="post-cover"
 									label={m.posts_field_cover()}
+									description={coverHint}
 									bind:value={cover}
 									{languageCode}
 									name="coverMediaId"
