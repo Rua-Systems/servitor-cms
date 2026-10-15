@@ -2,6 +2,16 @@
 
 All notable changes to Servitor CMS are listed here. Versions follow [Semantic Versioning](https://semver.org/); before 1.0.0, a minor version may change configuration, the API or the data in incompatible ways, and its notes say so.
 
+## Unreleased
+
+### Added
+
+- Card types under **Content → Card types**: staff define the fields of a type, such as text, numbers, prices with a currency, choices, yes or no, links and dates, and start from a ready-made product structure or from an empty one. Each field can be required, and text fields can have a separate value per language.
+
+### Changed
+
+- The post editor leaves room below the text and scrolls before the cursor reaches the bottom of the screen, so the line you write can stay near the middle.
+
 ## 0.3.0 - 2026-10-06
 
 ### Added

@@ -3,6 +3,7 @@ import BookOpen from '@lucide/svelte/icons/book-open';
 import ClipboardCheck from '@lucide/svelte/icons/clipboard-check';
 import FileText from '@lucide/svelte/icons/file-text';
 import FolderTree from '@lucide/svelte/icons/folder-tree';
+import LayoutTemplate from '@lucide/svelte/icons/layout-template';
 import Globe from '@lucide/svelte/icons/globe';
 import Images from '@lucide/svelte/icons/images';
 import KeyRound from '@lucide/svelte/icons/key-round';
@@ -89,6 +90,16 @@ export function panelNavigation(access: PanelNavigationAccess): NavigationGroup[
 			label: m.nav_categories(),
 			icon: FolderTree,
 			activePrefix: resolve('/panel/categories'),
+			exact: false
+		});
+	}
+
+	if (access.cardTypes) {
+		content.push({
+			href: resolve('/panel/card-types'),
+			label: m.nav_card_types(),
+			icon: LayoutTemplate,
+			activePrefix: resolve('/panel/card-types'),
 			exact: false
 		});
 	}

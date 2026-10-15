@@ -23,6 +23,7 @@ This documentation is available in two places: in the `docs` folder of the repos
 - [Users and roles](users.md): the permission model, invitations and user management.
 - [Writing posts](posts.md): the editor, translations, revisions, previews and search fields.
 - [Publishing](publishing.md): publishing, scheduling, reviews, unpublishing and moderation.
+- [Cards](cards.md): card types and their fields.
 - [Media](media.md): the media library, alternative texts and upload limits.
 - [Languages and categories](languages-and-categories.md): content languages, categories and tags.
 - [Settings and audit log](settings.md): system settings and the audit log.

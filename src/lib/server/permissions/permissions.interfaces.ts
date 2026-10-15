@@ -45,6 +45,7 @@ export interface PermissionResources {
 	'review.list': null;
 	'language.manage': null;
 	'category.manage': null;
+	'card_type.manage': null;
 	'api_key.manage': null;
 	'webhook.manage': null;
 	'cors.manage': null;

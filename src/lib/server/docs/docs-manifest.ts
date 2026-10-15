@@ -18,6 +18,7 @@ export const DOCS_SECTIONS: readonly { id: DocsSectionId; files: readonly string
 			'users.md',
 			'posts.md',
 			'publishing.md',
+			'cards.md',
 			'media.md',
 			'languages-and-categories.md',
 			'settings.md',
