@@ -34,6 +34,7 @@ const RULES: PermissionRules = {
 	'review.list': (actor) => isStaff(actor),
 	'language.manage': (actor) => isStaff(actor),
 	'category.manage': (actor) => isStaff(actor),
+	'card_type.manage': (actor) => isStaff(actor),
 	'api_key.manage': (actor) => isStaff(actor),
 	'webhook.manage': (actor) => isStaff(actor),
 	'cors.manage': (actor) => isStaff(actor),

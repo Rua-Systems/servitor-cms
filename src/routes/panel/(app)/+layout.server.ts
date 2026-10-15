@@ -22,6 +22,7 @@ export const load: LayoutServerLoad = ({ locals }) => {
 			audit: can(user, 'audit.view', null),
 			languages: can(user, 'language.manage', null),
 			categories: can(user, 'category.manage', null),
+			cardTypes: can(user, 'card_type.manage', null),
 			settings: can(user, 'settings.manage', null),
 			backups: can(user, 'backup.manage', null),
 			apiKeys: can(user, 'api_key.manage', null),

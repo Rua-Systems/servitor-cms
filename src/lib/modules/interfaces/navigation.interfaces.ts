@@ -24,6 +24,7 @@ export interface PanelNavigationAccess {
 	audit: boolean;
 	languages: boolean;
 	categories: boolean;
+	cardTypes: boolean;
 	settings: boolean;
 	backups: boolean;
 	apiKeys: boolean;

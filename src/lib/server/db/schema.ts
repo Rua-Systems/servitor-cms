@@ -1,6 +1,7 @@
 export * from './auth.schema';
 export * from './tables/api';
 export * from './tables/audit';
+export * from './tables/cards';
 export * from './tables/categories';
 export * from './tables/languages';
 export * from './tables/media';

@@ -297,6 +297,12 @@ const matrix: PermissionCase[] = [
 		author: false,
 		trustedAuthor: false
 	}),
+	...row('manage card types', 'card_type.manage', null, {
+		founder: true,
+		admin: true,
+		author: false,
+		trustedAuthor: false
+	}),
 	...row('manage API keys', 'api_key.manage', null, {
 		founder: true,
 		admin: true,

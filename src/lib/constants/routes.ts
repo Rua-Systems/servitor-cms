@@ -19,6 +19,7 @@ export const PANEL_ROUTES = {
 	audit: '/panel/audit',
 	languages: '/panel/languages',
 	categories: '/panel/categories',
+	cardTypes: '/panel/card-types',
 	settings: '/panel/settings',
 	backups: '/panel/backups',
 	preview: '/panel/preview'
